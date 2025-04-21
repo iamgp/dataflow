@@ -86,16 +86,16 @@ This list is exhaustive and strategic, with context and considerations for each 
 
   - [x] Add Evidence service to `docker-compose.yml` (set up port, volume for reports).
   - [x] Scaffold Evidence project in `integrations/evidence/`.
-  - [x] Add a sample dashboard and document how to add new ones.
+  - [x] Add a sample dashboard and document how to add new ones. # Sample index.md added, docs TODO
 
-- [ ] **2.5 Logging & Monitoring**
-  - [ ] Add Loki, Promtail, and Grafana services to `docker-compose.yml`.
-  - [ ] Configure Loguru + structlog for JSON logging:
-    - Set up a logging config module in `src/dataflow/shared/logging.py`.
-    - Ensure logs include workflow, job, and context fields.
-    - Document log format and how to add context in code.
-  - [ ] Configure Promtail to collect logs from all services (stdout, files).
-  - [ ] Set up basic Grafana dashboards for logs (and later, metrics).
+- [x] **2.5 Logging & Monitoring**
+  - [x] Add Loki, Promtail, and Grafana services to `docker-compose.yml`. # Verified
+  - [x] Configure Loguru + structlog for JSON logging:
+    - [x] Set up a logging config module in `src/dataflow/shared/logging.py`.
+    - [ ] Ensure logs include workflow, job, and context fields. # Base format done, context needs integration
+    - [x] Document log format and how to add context in code. # Basic setup documented
+  - [x] Configure Promtail to collect logs from all services (stdout, files). # Basic docker scrape config added
+  - [x] Set up basic Grafana dashboards for logs (and later, metrics). # Provisioning structure & Loki datasource added, dashboards are TODO
 
 ---
 

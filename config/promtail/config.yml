@@ -1,0 +1,45 @@
+# config/promtail/config.yml
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: containers
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        # Only scrape containers within the same Docker Compose project
+        # filters:
+        #   - name: label
+        #     values: ["com.docker.compose.project=your_project_name"] # Adjust if needed
+    relabel_configs:
+      # Relabel container labels to Loki labels
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: "container"
+      - source_labels:
+          ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: "service"
+      - source_labels:
+          ["__meta_docker_container_label_com_docker_compose_project"]
+        target_label: "project"
+      # Example relabeling for specific services (adjust as needed)
+      # - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+      #   regex: 'api'
+      #   target_label: 'job'
+      #   replacement: 'dataflow-api'
+# Example static config (if needed for specific files)
+# - job_name: system
+#   static_configs:
+#   - targets:
+#       - localhost
+#     labels:
+#       job: varlogs
+#       __path__: /var/log/*log # Path mounted from host in docker-compose
