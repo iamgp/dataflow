@@ -69,6 +69,10 @@ bump = "true"
 [tool.hatch.build.targets.wheel]
 packages = ["src/dataflow"]
 
+[tool.setuptools.package-dir]
+"" = "src"
+
+
 # ---- Settings ----
 
 [tool.ruff]
