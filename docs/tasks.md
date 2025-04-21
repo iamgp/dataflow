@@ -81,7 +81,7 @@ This list is exhaustive and strategic, with context and considerations for each 
     - [x] Use Click groups for logical command organization.
     - [x] Add help text and examples for each command.
     - [x] Ensure CLI can be run as `python -m dataflow.cli` or via entrypoint.
-    - [ ] Document CLI usage in `docs/`.
+    - [x] Document CLI usage in `docs/`.
 
 - [ ] **2.4 Visualization**
 
