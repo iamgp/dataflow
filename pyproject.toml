@@ -7,39 +7,32 @@ Repository = "https://github.com/iamgp/dataflow"
 
 [project]
 name = "dataflow"
-description = "changeme"
-authors = [
-    { name="Gareth Price", email="garethprice@me.com" },
-]
+description = "Modern, modular data warehouse platform"
+authors = [{ name = "Gareth Price", email = "garethprice@me.com" }]
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11,<4.0"
 dynamic = ["version"]
 
-# https://pypi.org/classifiers/
-# Adjust as needed:
-classifiers = [
-    # Adjust as needed:
-    "Development Status :: 4 - Beta",
-    # "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Typing :: Typed",
-    # Include this to avoid accidentally publishing to PyPI:
-    # "Private :: Do Not Upload",
-]
-
-
 # ---- Main dependencies ----
 
 dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "dagster>=1.7.0",
+    "dbt-core>=1.7.0",
+    "duckdb>=0.10.0",
+    "psycopg[binary]>=3.1.18",   # For Postgres support
+    "minio>=7.2.5",
+    "loguru>=0.7.2",
+    "structlog>=24.1.0",
+    "click>=8.1.7",
+    "pydantic>=2.7.1",
+    "python-dotenv>=1.0.1",
+    "httpx>=0.27.0",
+    "rich>=13.9.4",
+    # Add other core dependencies as needed
 ]
-
 
 # ---- Dev dependencies ----
 
@@ -48,20 +41,25 @@ dev = [
     "pytest>=8.3.5",
     "ruff>=0.11.0",
     "codespell>=2.4.1",
-    "rich>=13.9.4",
     "basedpyright>=1.28.2",
     "funlog>=0.2.0",
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.21",
+    "pytest-cov>=5.0.0",
+    "docker-compose>=1.29.2",
+    "pre-commit>=3.7.0",
+    "ipython>=8.24.0",
+    # Evidence is a Node.js tool, but you may want to add a Python wrapper or doc here
+    # "prometheus-client>=0.20.0",  # For custom metrics if needed
+    # "requests-mock>=1.12.1",      # For API testing
 ]
 
 [project.scripts]
-# Add script entry points here:
-dataflow = "dataflow:main"
-
+dataflow = "dataflow.cli:main"
+dataflow-api = "dataflow.api:main"
+# Add more entrypoints as needed
 
 # ---- Build system ----
-
-# Dynamic versioning from:
-# https://github.com/ninoseki/uv-dynamic-versioning/
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
@@ -69,9 +67,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
-# Note JSON schemas don't seem to be right for tool.hatch.version.source so
-# this may cause false warnings in IDEs.
-# https://github.com/ninoseki/uv-dynamic-versioning/issues/21
 
 [tool.uv-dynamic-versioning]
 vcs = "git"
@@ -79,83 +74,46 @@ style = "pep440"
 bump = "true"
 
 [tool.hatch.build.targets.wheel]
-# The source location for the package.
 packages = ["src/dataflow"]
-
 
 # ---- Settings ----
 
 [tool.ruff]
-# Set as desired, typically 88 (black standard) or 100 (wide).
 line-length = 100
 
 [tool.ruff.lint]
-select = [
-    # See: https://docs.astral.sh/ruff/rules/
-    # Basic list from: https://docs.astral.sh/ruff/linter/#rule-selection
-    "E", # https://docs.astral.sh/ruff/rules/#error-e
-    "F", # https://docs.astral.sh/ruff/rules/#pyflakes-f
-    "UP", # https://docs.astral.sh/ruff/rules/#pyupgrade-up
-    "B", # https://docs.astral.sh/ruff/rules/#flake8-bugbear-b
-    "I", # https://docs.astral.sh/ruff/rules/#isort-i
-    # Other possibilities:
-    # "D" # https://docs.astral.sh/ruff/rules/#pydocstyle-d
-    # "Q" # https://docs.astral.sh/ruff/rules/#flake8-quotes-q
-    # "COM" # https://docs.astral.sh/ruff/rules/#flake8-commas-com
-    # "SIM", # https://docs.astral.sh/ruff/rules/#flake8-simplify-sim
-
-]
+select = ["E", "F", "UP", "B", "I"]
 ignore = [
-    # Disable some rules that are overly pedantic. Add/remove as desired:
-    "E501", # https://docs.astral.sh/ruff/rules/line-too-long/
-    "E402", # https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file/
-    "E731", # https://docs.astral.sh/ruff/rules/lambda-assignment/
-    # We use both ruff formatter and linter so some rules should always be disabled.
-    # See: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
-    "W191", # https://docs.astral.sh/ruff/rules/tab-indentation/
-    "E111", # https://docs.astral.sh/ruff/rules/indentation-with-invalid-multiple/
-    "E114", # https://docs.astral.sh/ruff/rules/indentation-with-invalid-multiple-comment/
-    "E117", # https://docs.astral.sh/ruff/rules/over-indented/
-    "D206", # https://docs.astral.sh/ruff/rules/docstring-tab-indentation/
-    "D300", # https://docs.astral.sh/ruff/rules/triple-single-quotes/
-    "Q000", # https://docs.astral.sh/ruff/rules/bad-quotes-inline-string/
-    "Q001", # https://docs.astral.sh/ruff/rules/bad-quotes-multiline-string/
-    "Q002", # https://docs.astral.sh/ruff/rules/bad-quotes-docstring/
-    "Q003", # https://docs.astral.sh/ruff/rules/avoidable-escaped-quote/
-    "COM812", # https://docs.astral.sh/ruff/rules/missing-trailing-comma/
-    "COM819", # https://docs.astral.sh/ruff/rules/prohibited-trailing-comma/
-    "ISC002", # https://docs.astral.sh/ruff/rules/multi-line-implicit-string-concatenation/
+    "E501",
+    "E402",
+    "E731",
+    "W191",
+    "E111",
+    "E114",
+    "E117",
+    "D206",
+    "D300",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "COM812",
+    "COM819",
+    "ISC002",
 ]
 
 [tool.basedpyright]
-# BasedPyright currently seems like the best type checker option, much faster
-# than mypy and with a good extension for VSCode/Cursor.
-# https://marketplace.visualstudio.com/items?itemName=detachhead.basedpyright
-# https://docs.basedpyright.com/latest/configuration/config-files/#sample-pyprojecttoml-file
 include = ["src", "tests", "devtools"]
-# By default BasedPyright is very strict, so you almost certainly want to disable
-# some of the rules.
-# First, these turn off warnings about (yes) how you ignore warnings:
 reportIgnoreCommentWithoutRule = false
 reportUnnecessaryTypeIgnoreComment = false
-# A few typically noisy warnings are next.
-# How many you enable is up to you. The first few are off by default, but you can
-# comment/uncomment these as desired:
 reportMissingTypeStubs = false
 reportUnusedCallResult = false
 reportAny = false
 reportExplicitAny = false
 reportImplicitStringConcatenation = false
 reportUnreachable = false
-# reportPrivateImportUsage = false
-# reportPrivateLocalImportUsage = false
-# reportMissingImports = false
-# reportUnnecessaryIsInstance = false
-# reportUnknownVariableType = false
-# reportUnknownArgumentType = false
 
 [tool.codespell]
-# Add here as needed:
 # ignore-words-list = "foo,bar"
 # skip = "foo.py,bar.py"
 
@@ -163,9 +121,14 @@ reportUnreachable = false
 python_files = ["*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-testpaths = [
-    "src",
-    "tests",
-]
+testpaths = ["src", "tests"]
 norecursedirs = []
 filterwarnings = []
+
+# ---- MkDocs ----
+
+[tool.mkdocs]
+site_name = "DATAFLOW Documentation"
+docs_dir = "docs"
+site_dir = "site"
+theme = "material"
