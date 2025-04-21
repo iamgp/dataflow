@@ -10,7 +10,7 @@ from dataflow.shared.logging import log, setup_logging
 @click.option(
     "--log-level", default="INFO", help="Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
 )
-@click.option("--log-json", is_flag=True, default=False, help="Output logs in JSON format.")
+@click.option("--log-json", is_flag=True, default=True, help="Output logs in JSON format.")
 def cli(log_level, log_json):
     """DATAFLOW Command Line Interface"""
     # Configure logging here, only when a command is about to run
