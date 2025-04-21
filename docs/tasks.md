@@ -48,28 +48,28 @@ This list is exhaustive and strategic, with context and considerations for each 
 
 ## 2. Core Service Setup
 
-- [ ] **2.1 Database & Storage**
+- [x] **2.1 Database & Storage**
 
-  - [ ] Add DuckDB and/or Postgres service to `docker-compose.yml` (choose default, allow override).
-  - [ ] Add Minio service to `docker-compose.yml` (set up access/secret keys via env vars).
+  - [x] Add DuckDB and/or Postgres service to `docker-compose.yml` (choose default, allow override).
+  - [x] Add Minio service to `docker-compose.yml` (set up access/secret keys via env vars).
   - [x] Implement `src/dataflow/shared/db.py`:
     - Connection helpers, context managers, and query utilities.
     - Consider connection pooling and error handling.
   - [x] Implement `src/dataflow/shared/minio.py`:
     - File upload/download helpers.
     - Bucket creation/checks.
-    - Document how to use these utilities in workflow code.
+  - [x] Document how to use these utilities in workflow code.
 
 - [ ] **2.2 Orchestration & Workflow Engine**
 
-  - [ ] Add Dagster service to `docker-compose.yml` (expose UI port).
-  - [ ] Scaffold Dagster project and workspace:
-    - Define a repository for jobs/assets.
-    - Set up workspace.yaml for local and CI use.
-  - [ ] Implement `src/dataflow/workflows/registry.py`:
-    - Global registry (list or dict).
-    - `@register_workflow` decorator (optionally with metadata).
-    - Discovery logic for CLI and Dagster.
+  - [x] Add Dagster service to `docker-compose.yml` (expose UI port).
+  - [x] Scaffold Dagster project and workspace:
+    - [x] Define a repository for jobs/assets (`src/dataflow/dagster_repo.py`).
+    - [x] Set up workspace.yaml for local and CI use (`workspace.yaml`).
+  - [x] Implement `src/dataflow/workflows/registry.py`:
+    - [x] Global registry (list or dict).
+    - [x] `@register_workflow` decorator (optionally with metadata).
+    - [x] Discovery logic for CLI and Dagster.
 
 - [ ] **2.3 API & CLI**
 
