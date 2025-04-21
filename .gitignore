@@ -90,17 +90,10 @@ poetry.lock
 .dmypy.json
 dmypy.json
 
-# VS Code
-.vscode/
-.code-workspace
-
 # Editor directories and files
 .idea/
 *.sublime-project
 *.sublime-workspace
-
-# Devcontainer
-.devcontainer/*
 
 # Docker
 *.env
