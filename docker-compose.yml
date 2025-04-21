@@ -111,9 +111,14 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/application_logs.json
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=5s
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    user: "472"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
       - dataflow-network
 
@@ -129,8 +134,12 @@ services:
 
   promtail:
     image: grafana/promtail:latest
+    user: root
     volumes:
       - /var/log:/var/log
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/promtail:/etc/promtail
+      - ${PWD}/logs:/logs
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
