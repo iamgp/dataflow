@@ -1,0 +1,159 @@
+services:
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=dataflow
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - DAGSTER_HOST=dagster
+      - DAGSTER_PORT=3000
+      - LOG_LEVEL=INFO
+    depends_on:
+      - db
+      - minio
+      - dagster
+    volumes:
+      - ./src:/app/src
+    networks:
+      - dataflow-network
+
+  # Dagster Orchestration
+  dagster:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dagster
+    ports:
+      - "3000:3000"
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=dataflow
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - DAGSTER_HOME=/opt/dagster/dagster_home
+      - LOG_LEVEL=INFO
+    volumes:
+      - dagster-data:/opt/dagster/dagster_home
+      - ./src:/app/src
+    depends_on:
+      - db
+      - minio
+    networks:
+      - dataflow-network
+
+  # Database (PostgreSQL)
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=dataflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dataflow-network
+
+  # Object Storage (MinIO)
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - dataflow-network
+
+  # Evidence Dashboard - Using a shared evidence service that works with workflow-specific dashboards
+  evidence:
+    image: evidencedev/devenv:latest
+    ports:
+      - "9000:3000"
+    volumes:
+      # Mount the entire src directory to access workflow-specific evidence dashboards
+      - ./src:/evidence-workspace/src
+      # This setup allows Evidence to access all workflow evidence directories
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/dataflow
+    depends_on:
+      - db
+    networks:
+      - dataflow-network
+
+  # Logging (Grafana, Loki, Promtail)
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - dataflow-network
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+    networks:
+      - dataflow-network
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/log:/var/log
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - dataflow-network
+
+  # Optional: Monitoring with Prometheus (Stretch goal)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    networks:
+      - dataflow-network
+
+networks:
+  dataflow-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  minio-data:
+  dagster-data:
+  grafana-data:
+  loki-data:
+  prometheus-data:
