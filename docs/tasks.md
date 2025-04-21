@@ -6,43 +6,43 @@ This list is exhaustive and strategic, with context and considerations for each 
 
 ## 1. Repository & Project Bootstrapping
 
-- [ ] **1.1 Repository Initialization**
+- [x] **1.1 Repository Initialization**
 
-  - [ ] Create a new GitHub repository (private or public as appropriate).
-  - [ ] Add `.gitignore` for Python, Docker, VS Code, and data artifacts.
-  - [ ] Add a `README.md` with:
+  - [x] Create a new GitHub repository (private or public as appropriate).
+  - [x] Add `.gitignore` for Python, Docker, VS Code, and data artifacts.
+  - [x] Add a `README.md` with:
     - Project summary and goals
     - Quickstart instructions
     - Contribution guidelines (link to docs)
-  - [ ] Add a `LICENSE` (MIT, Apache 2.0, or company standard).
-  - [ ] Set up branch protection, required status checks, and code review rules.
+  - [x] Add a `LICENSE` (MIT, Apache 2.0, or company standard).
+  - [x] Set up branch protection, required status checks, and code review rules.
 
-- [ ] **1.2 Core Directory Structure**
+- [x] **1.2 Core Directory Structure**
 
-  - [ ] Create `src/dataflow/` and subfolders: `workflows/`, `shared/`, `api/`, `cli/`, `utils/`.
-  - [ ] Create `integrations/`, `docs/`, `tests/`, `scripts/`.
-  - [ ] Add placeholder files (`__init__.py`, `README.md`) in each directory.
-  - [ ] Document the directory structure in the main `README.md` and `docs/`.
+  - [x] Create `src/dataflow/` and subfolders: `workflows/`, `shared/`, `api/`, `cli/`, `utils/`.
+  - [x] Create `integrations/`, `docs/`, `tests/`, `scripts/`.
+  - [x] Add placeholder files (`__init__.py`, `README.md`) in each directory.
+  - [x] Document the directory structure in the main `README.md` and `docs/`.
 
-- [ ] **1.3 Python Project Setup**
+- [x] **1.3 Python Project Setup**
 
-  - [ ] Create `pyproject.toml` with:
+  - [x] Create `pyproject.toml` with:
     - Project metadata (name, version, authors, description)
     - Dependencies (see PRD)
     - Tool configs for `ruff`, `pytest`, `basedpyright`, etc.
-  - [ ] Add `requirements.txt` for Docker/CI compatibility if needed.
-  - [ ] Set up `pre-commit` config for:
+  - [x] Add `requirements.txt` for Docker/CI compatibility if needed.
+  - [x] Set up `pre-commit` config for:
     - Linting (`ruff`)
     - Formatting (if using `black` or `ruff format`)
     - Type checking (`basedpyright`)
     - End-of-line and whitespace checks
-  - [ ] Add a `Makefile` or `hatch` scripts for common dev tasks (optional).
+  - [x] Add a `Makefile` or `hatch` scripts for common dev tasks (optional).
 
-- [ ] **1.4 Dev Environment**
-  - [ ] Add `.devcontainer/` for VS Code/Codespaces (define Python version, extensions, ports).
-  - [ ] Add `docker-compose.yml` for all core services (see PRD).
-  - [ ] Add `Dockerfile` for main app image (consider multi-stage builds for efficiency).
-  - [ ] Document how to use Docker Compose and dev containers in the onboarding guide.
+- [x] **1.4 Dev Environment**
+  - [x] Add `.devcontainer/` for VS Code/Codespaces (define Python version, extensions, ports).
+  - [x] Add `docker-compose.yml` for all core services (see PRD).
+  - [x] Add `Dockerfile` for main app image (consider multi-stage builds for efficiency).
+  - [x] Document how to use Docker Compose and dev containers in the onboarding guide.
 
 ---
 
@@ -52,10 +52,10 @@ This list is exhaustive and strategic, with context and considerations for each 
 
   - [ ] Add DuckDB and/or Postgres service to `docker-compose.yml` (choose default, allow override).
   - [ ] Add Minio service to `docker-compose.yml` (set up access/secret keys via env vars).
-  - [ ] Implement `src/dataflow/shared/db.py`:
+  - [x] Implement `src/dataflow/shared/db.py`:
     - Connection helpers, context managers, and query utilities.
     - Consider connection pooling and error handling.
-  - [ ] Implement `src/dataflow/shared/minio.py`:
+  - [x] Implement `src/dataflow/shared/minio.py`:
     - File upload/download helpers.
     - Bucket creation/checks.
     - Document how to use these utilities in workflow code.
