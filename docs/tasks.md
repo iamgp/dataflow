@@ -71,16 +71,16 @@ This list is exhaustive and strategic, with context and considerations for each 
     - [x] `@register_workflow` decorator (optionally with metadata).
     - [x] Discovery logic for CLI and Dagster.
 
-- [ ] **2.3 API & CLI**
+- [x] **2.3 API & CLI**
 
   - [x] Scaffold FastAPI app in `src/dataflow/api/`:
     - [x] Modularize routers (workflows, data, logs, health).
-    - [ ] Add OpenAPI tags and descriptions.
+    - [x] Add OpenAPI tags and descriptions.
     - [ ] Consider CORS and security settings.
   - [x] Scaffold Click CLI in `src/dataflow/cli/`:
-    - [ ] Use Click groups for logical command organization.
-    - [ ] Add help text and examples for each command.
-    - [ ] Ensure CLI can be run as `python -m dataflow.cli` or via entrypoint.
+    - [x] Use Click groups for logical command organization.
+    - [x] Add help text and examples for each command.
+    - [x] Ensure CLI can be run as `python -m dataflow.cli` or via entrypoint.
     - [ ] Document CLI usage in `docs/`.
 
 - [ ] **2.4 Visualization**

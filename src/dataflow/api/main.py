@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from dataflow.api.routers import health
+from dataflow.api.routers import data, health, logs, workflows
 
 app = FastAPI(
     title="DATAFLOW API",
@@ -10,6 +10,9 @@ app = FastAPI(
 
 # Include routers
 app.include_router(health.router)
+app.include_router(workflows.router)
+app.include_router(data.router)
+app.include_router(logs.router)
 
 
 # Root endpoint (optional)
