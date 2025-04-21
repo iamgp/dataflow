@@ -40,7 +40,7 @@ Docker Compose allows you to run all the services required for Dataflow with a s
 
    - FastAPI docs: http://localhost:8000/docs
    - Dagster UI: http://localhost:3000
-   - Evidence dashboards: http://localhost:9000
+   - Evidence dashboards: http://localhost:9002
    - Grafana: http://localhost:3001
    - MinIO Console: http://localhost:9001
 
@@ -140,7 +140,7 @@ Evidence is used for data visualization and dashboards. In the Dataflow project 
 docker-compose up evidence
 
 # Access Evidence dashboards
-open http://localhost:9000
+open http://localhost:9002
 ```
 
 The Evidence service uses the `evidencedev/devenv` Docker image with the source directory mounted to allow access to all workflow-specific Evidence dashboards.

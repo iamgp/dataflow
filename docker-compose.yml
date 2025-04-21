@@ -85,21 +85,20 @@ services:
     networks:
       - dataflow-network
 
-  # Evidence Dashboard - Using a shared evidence service that works with workflow-specific dashboards
+  # Evidence Dashboard
   evidence:
     image: evidencedev/devenv:latest
     ports:
-      - "9000:3000"
+      - "9002:3000"
     volumes:
-      # Mount the entire src directory to access workflow-specific evidence dashboards
-      - ./src:/evidence-workspace/src
-      # This setup allows Evidence to access all workflow evidence directories
+      - ./integrations/evidence:/evidence-workspace
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/dataflow
     depends_on:
       - db
     networks:
       - dataflow-network
+    mem_limit: 2g
 
   # Logging (Grafana, Loki, Promtail)
   grafana:

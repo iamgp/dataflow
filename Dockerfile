@@ -8,7 +8,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
-    POETRY_VERSION=1.4.2
+    POETRY_VERSION=1.4.2 \
+    PYTHONPATH=/app/src:$PYTHONPATH
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -20,9 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv for dependency management
 RUN pip install uv
 
-# Set up Python path
-ENV PYTHONPATH=/app:$PYTHONPATH
-
 # Create app directory
 WORKDIR /app
 
@@ -31,12 +29,21 @@ WORKDIR /app
 ###############
 FROM base AS dependencies
 
-# Copy only pyproject.toml and related files first for better caching
-COPY pyproject.toml ./
+# Copy files needed for building
+COPY pyproject.toml README.md ./
 
-# Install all dependencies
-RUN uv venv --python 3.11
-RUN uv pip install -e .
+# Initialize a Git repository for dynamic versioning
+RUN git init && \
+    git config --global user.email "build@example.com" && \
+    git config --global user.name "Docker Build" && \
+    git add . && \
+    git commit -m "Initial commit for build"
+
+# Copy the entire project to ensure proper installation
+COPY . .
+
+# Install all dependencies directly with pip
+RUN pip install -e .
 
 ###############
 # Development Stage
@@ -44,18 +51,12 @@ RUN uv pip install -e .
 FROM dependencies AS development
 
 # Install development dependencies
-RUN uv pip install -e ".[dev]"
-
-# Copy the rest of the code
-COPY . .
+RUN pip install -e ".[dev]"
 
 ###############
 # API Stage
 ###############
 FROM dependencies AS api
-
-# Copy the rest of the application code
-COPY . .
 
 # Expose port for API
 EXPOSE 8000
@@ -68,22 +69,23 @@ CMD ["uvicorn", "dataflow.api:app", "--host", "0.0.0.0", "--port", "8000"]
 ###############
 FROM dependencies AS dagster
 
-# Copy the rest of the application code
-COPY . .
+# Install Dagster explicitly
+RUN pip install dagster dagster-webserver
+
+# Create dagster home directory and ensure permissions
+RUN mkdir -p /opt/dagster/dagster_home && \
+    touch /opt/dagster/dagster_home/dagster.yaml
 
 # Expose port for Dagster UI
 EXPOSE 3000
 
 # Command to run the Dagster server
-CMD ["dagster", "dev", "-h", "0.0.0.0", "-p", "3000"]
+CMD ["dagster", "dev", "-m", "dataflow.workflows", "-h", "0.0.0.0", "-p", "3000"]
 
 ###############
 # CLI Stage
 ###############
 FROM dependencies AS cli
-
-# Copy the rest of the application code
-COPY . .
 
 # Set entrypoint to the CLI
 ENTRYPOINT ["dataflow"]
