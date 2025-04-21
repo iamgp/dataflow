@@ -48,7 +48,7 @@ dev = [
 
 
 [project.scripts]
-dataflow = "dataflow.cli:main"
+dataflow = "dataflow.cli.main:main"
 dataflow-api = "dataflow.api:main"
 # Add more entrypoints as needed
 

@@ -19,6 +19,7 @@ services:
       - DAGSTER_HOST=dagster
       - DAGSTER_PORT=3000
       - LOG_LEVEL=INFO
+      - LOG_JSON_FORMAT=true
     depends_on:
       - db
       - minio
@@ -47,6 +48,7 @@ services:
       - MINIO_SECRET_KEY=minioadmin
       - DAGSTER_HOME=/opt/dagster/dagster_home
       - LOG_LEVEL=INFO
+      - LOG_JSON_FORMAT=true
     volumes:
       - dagster-data:/opt/dagster/dagster_home
       - ./src:/app/src
@@ -111,6 +113,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
     networks:
       - dataflow-network
 
