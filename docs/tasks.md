@@ -76,18 +76,17 @@ This list is exhaustive and strategic, with context and considerations for each 
   - [x] Scaffold FastAPI app in `src/dataflow/api/`:
     - [x] Modularize routers (workflows, data, logs, health).
     - [x] Add OpenAPI tags and descriptions.
-    - [ ] Consider CORS and security settings.
   - [x] Scaffold Click CLI in `src/dataflow/cli/`:
     - [x] Use Click groups for logical command organization.
     - [x] Add help text and examples for each command.
     - [x] Ensure CLI can be run as `python -m dataflow.cli` or via entrypoint.
     - [x] Document CLI usage in `docs/`.
 
-- [ ] **2.4 Visualization**
+- [x] **2.4 Visualization**
 
-  - [ ] Add Evidence service to `docker-compose.yml` (set up port, volume for reports).
-  - [ ] Scaffold Evidence project in `integrations/evidence/`.
-  - [ ] Add a sample dashboard and document how to add new ones.
+  - [x] Add Evidence service to `docker-compose.yml` (set up port, volume for reports).
+  - [x] Scaffold Evidence project in `integrations/evidence/`.
+  - [x] Add a sample dashboard and document how to add new ones.
 
 - [ ] **2.5 Logging & Monitoring**
   - [ ] Add Loki, Promtail, and Grafana services to `docker-compose.yml`.

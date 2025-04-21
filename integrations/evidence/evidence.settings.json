@@ -1,0 +1,12 @@
+{
+    "database": "postgres",
+    "credentials": {
+        "host": "db",
+        "port": 5432,
+        "user": "postgres",
+        "password": "postgres",
+        "database": "dataflow"
+    },
+    "template": "default",
+    "evidenceDir": ".evidence"
+}
