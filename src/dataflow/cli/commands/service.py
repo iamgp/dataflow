@@ -100,4 +100,27 @@ def service_status():
     run_docker_compose(["ps"])
 
 
+@service_group.command("restart")
+@click.argument("service_names", nargs=-1)
+@click.option("--all", is_flag=True, help="Restart all services.")
+def restart_services(service_names, all):
+    """Restart specified services or all services."""
+    args = ["restart"]
+    target_services = []
+    if all:
+        target_services = ["all"]
+        log.info("Restarting all services...")
+        # No need to add specific service names if restarting all
+    elif service_names:
+        target_services = list(service_names)
+        args.extend(target_services)
+        log.info(f"Restarting services: {', '.join(target_services)}...")
+    else:
+        click.echo("Error: No services specified. Use service names or --all.")
+        log.error("No services specified for 'restart' command.")
+        return
+
+    run_docker_compose(args)
+
+
 # TODO: Add commands for logs, restart, etc.
