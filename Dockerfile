@@ -9,7 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     POETRY_VERSION=1.4.2 \
-    PYTHONPATH=/app/src:$PYTHONPATH
+    PYTHONPATH=/app/src:$PYTHONPATH \
+    PATH="/home/vscode/.local/bin:${PATH}"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,9 +18,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     && rm -rf /var/lib/apt/lists/*
-
-# Install uv for dependency management
-RUN pip install uv
 
 # Create app directory
 WORKDIR /app
