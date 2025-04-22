@@ -1,6 +1,7 @@
 """Global test fixtures and utilities for dataflow tests."""
 
 import os
+import subprocess
 from collections.abc import Generator
 from pathlib import Path
 
@@ -48,16 +49,23 @@ def docker_services():
             pass
 
         # Start services
-        result = os.system(f"cd {PROJECT_ROOT} && docker-compose up -d")
-        if result != 0:
-            pytest.skip("Failed to start Docker Compose services")
+        result = subprocess.run(
+            f"cd {PROJECT_ROOT} && docker-compose up -d", shell=True, capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            pytest.skip(f"Failed to start Docker Compose services: {result.stderr}")
 
         try:
             # Wait for services to be ready
             wait_for_services()
         except Exception as e:
             # Stop services if they failed to start properly
-            os.system(f"cd {PROJECT_ROOT} && docker-compose down")
+            subprocess.run(
+                f"cd {PROJECT_ROOT} && docker-compose down",
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
             pytest.skip(f"Services failed to start: {str(e)}")
 
     # Provide the fixture
@@ -65,7 +73,9 @@ def docker_services():
 
     # Clean up if needed
     if os.environ.get("STOP_DOCKER_SERVICES", "false").lower() == "true":
-        os.system(f"cd {PROJECT_ROOT} && docker-compose down")
+        subprocess.run(
+            f"cd {PROJECT_ROOT} && docker-compose down", shell=True, capture_output=True, text=True
+        )
 
 
 @retry(tries=10, delay=3)
