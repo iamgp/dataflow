@@ -1,12 +1,16 @@
 """API endpoints for workflow configuration management."""
 
-from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from dataflow.shared.config import WorkflowConfigError, config_manager
+from dataflow.shared.config import (
+    WorkflowConfigError,
+    config_manager,
+    get_workflow_config_path,
+    get_workflows_directory,
+)
 from dataflow.shared.logging import get_logger
 
 log = get_logger("dataflow.api.configs")
@@ -38,7 +42,7 @@ def list_configs():
         Dict with list of workflow names
     """
     # Scan the workflows directory
-    workflows_dir = Path("src") / "dataflow" / "workflows"
+    workflows_dir = get_workflows_directory()
 
     if not workflows_dir.exists():
         raise HTTPException(status_code=500, detail="Workflows directory not found")
@@ -74,8 +78,7 @@ def get_config(
     try:
         if raw:
             # Load the raw config directly from the file
-            workflow_dir = Path("src") / "dataflow" / "workflows" / workflow_name
-            config_path = workflow_dir / "config.yaml"
+            config_path = get_workflow_config_path(workflow_name)
 
             if not config_path.exists():
                 raise HTTPException(

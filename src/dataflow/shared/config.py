@@ -21,6 +21,39 @@ class WorkflowConfigError(Exception):
     pass
 
 
+def get_workflow_directory(workflow_name: str) -> Path:
+    """Get the directory path for a workflow.
+
+    Args:
+        workflow_name: Name of the workflow
+
+    Returns:
+        Path to the workflow directory
+    """
+    return Path("src") / "dataflow" / "workflows" / workflow_name
+
+
+def get_workflow_config_path(workflow_name: str) -> Path:
+    """Get the path to a workflow's configuration file.
+
+    Args:
+        workflow_name: Name of the workflow
+
+    Returns:
+        Path to the workflow configuration file
+    """
+    return get_workflow_directory(workflow_name) / "config.yaml"
+
+
+def get_workflows_directory() -> Path:
+    """Get the directory containing all workflows.
+
+    Returns:
+        Path to the workflows directory
+    """
+    return Path("src") / "dataflow" / "workflows"
+
+
 def load_workflow_config(workflow_name: str) -> dict[str, Any]:
     """Load workflow configuration from YAML file.
 
@@ -34,8 +67,7 @@ def load_workflow_config(workflow_name: str) -> dict[str, Any]:
         WorkflowConfigError: If the configuration file is not found or is invalid
     """
     # Determine the path to the workflow config
-    workflow_dir = Path("src") / "dataflow" / "workflows" / workflow_name
-    config_path = workflow_dir / "config.yaml"
+    config_path = get_workflow_config_path(workflow_name)
 
     if not config_path.exists():
         raise WorkflowConfigError(f"Configuration file not found: {config_path}")
