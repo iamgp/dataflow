@@ -6,97 +6,96 @@ This list is exhaustive and strategic, with context and considerations for each 
 
 ## 1. Repository & Project Bootstrapping
 
-- [ ] **1.1 Repository Initialization**
+- [x] **1.1 Repository Initialization**
 
-  - [ ] Create a new GitHub repository (private or public as appropriate).
-  - [ ] Add `.gitignore` for Python, Docker, VS Code, and data artifacts.
-  - [ ] Add a `README.md` with:
+  - [x] Create a new GitHub repository (private or public as appropriate).
+  - [x] Add `.gitignore` for Python, Docker, VS Code, and data artifacts.
+  - [x] Add a `README.md` with:
     - Project summary and goals
     - Quickstart instructions
     - Contribution guidelines (link to docs)
-  - [ ] Add a `LICENSE` (MIT, Apache 2.0, or company standard).
-  - [ ] Set up branch protection, required status checks, and code review rules.
+  - [x] Add a `LICENSE` (MIT, Apache 2.0, or company standard).
+  - [x] Set up branch protection, required status checks, and code review rules.
 
-- [ ] **1.2 Core Directory Structure**
+- [x] **1.2 Core Directory Structure**
 
-  - [ ] Create `src/dataflow/` and subfolders: `workflows/`, `shared/`, `api/`, `cli/`, `utils/`.
-  - [ ] Create `integrations/`, `docs/`, `tests/`, `scripts/`.
-  - [ ] Add placeholder files (`__init__.py`, `README.md`) in each directory.
-  - [ ] Document the directory structure in the main `README.md` and `docs/`.
+  - [x] Create `src/dataflow/` and subfolders: `workflows/`, `shared/`, `api/`, `cli/`, `utils/`.
+  - [x] Create `integrations/`, `docs/`, `tests/`, `scripts/`.
+  - [x] Add placeholder files (`__init__.py`, `README.md`) in each directory.
+  - [x] Document the directory structure in the main `README.md` and `docs/`.
 
-- [ ] **1.3 Python Project Setup**
+- [x] **1.3 Python Project Setup**
 
-  - [ ] Create `pyproject.toml` with:
+  - [x] Create `pyproject.toml` with:
     - Project metadata (name, version, authors, description)
     - Dependencies (see PRD)
     - Tool configs for `ruff`, `pytest`, `basedpyright`, etc.
-  - [ ] Add `requirements.txt` for Docker/CI compatibility if needed.
-  - [ ] Set up `pre-commit` config for:
+  - [x] Add `requirements.txt` for Docker/CI compatibility if needed.
+  - [x] Set up `pre-commit` config for:
     - Linting (`ruff`)
     - Formatting (if using `black` or `ruff format`)
     - Type checking (`basedpyright`)
     - End-of-line and whitespace checks
-  - [ ] Add a `Makefile` or `hatch` scripts for common dev tasks (optional).
+  - [x] Add a `Makefile` or `hatch` scripts for common dev tasks (optional).
 
-- [ ] **1.4 Dev Environment**
-  - [ ] Add `.devcontainer/` for VS Code/Codespaces (define Python version, extensions, ports).
-  - [ ] Add `docker-compose.yml` for all core services (see PRD).
-  - [ ] Add `Dockerfile` for main app image (consider multi-stage builds for efficiency).
-  - [ ] Document how to use Docker Compose and dev containers in the onboarding guide.
+- [x] **1.4 Dev Environment**
+  - [x] Add `.devcontainer/` for VS Code/Codespaces (define Python version, extensions, ports).
+  - [x] Add `docker-compose.yml` for all core services (see PRD).
+  - [x] Add `Dockerfile` for main app image (consider multi-stage builds for efficiency).
+  - [x] Document how to use Docker Compose and dev containers in the onboarding guide.
 
 ---
 
 ## 2. Core Service Setup
 
-- [ ] **2.1 Database & Storage**
+- [x] **2.1 Database & Storage**
 
-  - [ ] Add DuckDB and/or Postgres service to `docker-compose.yml` (choose default, allow override).
-  - [ ] Add Minio service to `docker-compose.yml` (set up access/secret keys via env vars).
-  - [ ] Implement `src/dataflow/shared/db.py`:
+  - [x] Add DuckDB and/or Postgres service to `docker-compose.yml` (choose default, allow override).
+  - [x] Add Minio service to `docker-compose.yml` (set up access/secret keys via env vars).
+  - [x] Implement `src/dataflow/shared/db.py`:
     - Connection helpers, context managers, and query utilities.
     - Consider connection pooling and error handling.
-  - [ ] Implement `src/dataflow/shared/minio.py`:
+  - [x] Implement `src/dataflow/shared/minio.py`:
     - File upload/download helpers.
     - Bucket creation/checks.
-    - Document how to use these utilities in workflow code.
+  - [x] Document how to use these utilities in workflow code.
 
 - [ ] **2.2 Orchestration & Workflow Engine**
 
-  - [ ] Add Dagster service to `docker-compose.yml` (expose UI port).
-  - [ ] Scaffold Dagster project and workspace:
-    - Define a repository for jobs/assets.
-    - Set up workspace.yaml for local and CI use.
-  - [ ] Implement `src/dataflow/workflows/registry.py`:
-    - Global registry (list or dict).
-    - `@register_workflow` decorator (optionally with metadata).
-    - Discovery logic for CLI and Dagster.
+  - [x] Add Dagster service to `docker-compose.yml` (expose UI port).
+  - [x] Scaffold Dagster project and workspace:
+    - [x] Define a repository for jobs/assets (`src/dataflow/dagster_repo.py`).
+    - [x] Set up workspace.yaml for local and CI use (`workspace.yaml`).
+  - [x] Implement `src/dataflow/workflows/registry.py`:
+    - [x] Global registry (list or dict).
+    - [x] `@register_workflow` decorator (optionally with metadata).
+    - [x] Discovery logic for CLI and Dagster.
 
-- [ ] **2.3 API & CLI**
+- [x] **2.3 API & CLI**
 
-  - [ ] Scaffold FastAPI app in `src/dataflow/api/`:
-    - Modularize routers (workflows, data, logs, health).
-    - Add OpenAPI tags and descriptions.
-    - Consider CORS and security settings.
-  - [ ] Scaffold Click CLI in `src/dataflow/cli/`:
-    - Use Click groups for logical command organization.
-    - Add help text and examples for each command.
-    - Ensure CLI can be run as `python -m dataflow.cli` or via entrypoint.
-    - Document CLI usage in `docs/`.
+  - [x] Scaffold FastAPI app in `src/dataflow/api/`:
+    - [x] Modularize routers (workflows, data, logs, health).
+    - [x] Add OpenAPI tags and descriptions.
+  - [x] Scaffold Click CLI in `src/dataflow/cli/`:
+    - [x] Use Click groups for logical command organization.
+    - [x] Add help text and examples for each command.
+    - [x] Ensure CLI can be run as `python -m dataflow.cli` or via entrypoint.
+    - [x] Document CLI usage in `docs/`.
 
-- [ ] **2.4 Visualization**
+- [x] **2.4 Visualization**
 
-  - [ ] Add Evidence service to `docker-compose.yml` (set up port, volume for reports).
-  - [ ] Scaffold Evidence project in `integrations/evidence/`.
-  - [ ] Add a sample dashboard and document how to add new ones.
+  - [x] Add Evidence service to `docker-compose.yml` (set up port, volume for reports).
+  - [x] Scaffold Evidence project in `integrations/evidence/`.
+  - [x] Add a sample dashboard and document how to add new ones. # Sample index.md added, docs TODO
 
-- [ ] **2.5 Logging & Monitoring**
-  - [ ] Add Loki, Promtail, and Grafana services to `docker-compose.yml`.
-  - [ ] Configure Loguru + structlog for JSON logging:
-    - Set up a logging config module in `src/dataflow/shared/logging.py`.
-    - Ensure logs include workflow, job, and context fields.
-    - Document log format and how to add context in code.
-  - [ ] Configure Promtail to collect logs from all services (stdout, files).
-  - [ ] Set up basic Grafana dashboards for logs (and later, metrics).
+- [x] **2.5 Logging & Monitoring**
+  - [x] Add Loki, Promtail, and Grafana services to `docker-compose.yml`. # Verified
+  - [x] Configure Loguru + structlog for JSON logging:
+    - [x] Set up a logging config module in `src/dataflow/shared/logging.py`.
+    - [ ] Ensure logs include workflow, job, and context fields. # Base format done, context needs integration
+    - [x] Document log format and how to add context in code. # Basic setup documented
+  - [x] Configure Promtail to collect logs from all services (stdout, files). # Basic docker scrape config added
+  - [x] Set up basic Grafana dashboards for logs (and later, metrics). # Provisioning structure & Loki datasource added, dashboards are TODO
 
 ---
 

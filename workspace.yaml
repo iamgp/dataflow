@@ -1,0 +1,5 @@
+load_from:
+  - python_module:
+      module_name: dataflow.dagster_repo
+      attribute: dataflow_repo # The @repository decorated function
+      working_directory: src # Assuming 'src' is the root for the python module
