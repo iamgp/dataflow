@@ -1,0 +1,69 @@
+# Workflow Configuration
+# This file contains all configurable parameters for the workflow
+
+# Data Source Configuration
+source:
+  name: "example_source"
+  type: "api" # Options: api, file, database
+  # API-specific settings
+  api:
+    url: "https://api.example.com/data"
+    method: "GET"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer ${API_TOKEN}" # Environment variable
+    params:
+      limit: 100
+    # Authentication settings
+    auth:
+      type: "oauth2" # Options: basic, oauth2, api_key
+      client_id: "${CLIENT_ID}"
+      client_secret: "${CLIENT_SECRET}"
+  # File-specific settings
+  file:
+    path: "/data/input/example.csv"
+    format: "csv" # Options: csv, json, parquet, etc.
+    delimiter: ","
+    encoding: "utf-8"
+  # Database-specific settings
+  database:
+    connection_string: "${DATABASE_CONNECTION_STRING}"
+    query: "SELECT * FROM example_table"
+
+# Data Processing Configuration
+processing:
+  batch_size: 1000
+  parallel_workers: 4
+  error_handling:
+    max_retries: 3
+    retry_delay_seconds: 5
+    fail_on_error: false
+
+# Output Configuration
+output:
+  destinations:
+    - name: "primary_db"
+      type: "database"
+      connection_string: "${OUTPUT_DB_CONNECTION}"
+      table: "processed_data"
+      if_exists: "append" # Options: append, replace, fail
+    - name: "backup_storage"
+      type: "file"
+      path: "/data/output/processed.parquet"
+      format: "parquet"
+
+# Schedule Configuration
+schedule:
+  cron: "0 0 * * *" # Daily at midnight
+  timezone: "UTC"
+
+# Monitoring and Alerting
+monitoring:
+  error_threshold: 100 # Alert if more than 100 errors
+  alert_channels:
+    - type: "email"
+      recipients:
+        - "team@example.com"
+    - type: "slack"
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#data-alerts"

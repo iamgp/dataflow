@@ -121,7 +121,7 @@ python_files = ["*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 testpaths = ["src", "tests"]
-norecursedirs = []
+norecursedirs = ["src/dataflow/templates", "__pycache__"]
 filterwarnings = []
 markers = [
     "unit: Unit tests that don't require external services",

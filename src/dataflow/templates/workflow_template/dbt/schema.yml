@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: staged_data
+    description: "Staged data with basic type conversions"
+    columns:
+      - name: id
+        description: "Unique identifier for the record"
+        tests:
+          - unique
+          - not_null
+      - name: timestamp
+        description: "When the record was created"
+        tests:
+          - not_null
+      - name: value
+        description: "The main data value"
+      - name: type
+        description: "The type of record"
+        tests:
+          - accepted_values:
+              values: ["type1", "type2"]
+      - name: processed_at
+        description: "When the record was processed by our pipeline"
+        tests:
+          - not_null
+
+  - name: summary_table
+    description: "Aggregated metrics from the data"
+    columns:
+      - name: date
+        description: "Date of the aggregation"
+        tests:
+          - unique
+          - not_null
+      - name: record_count
+        description: "Number of records for the date"
+        tests:
+          - not_null
+      - name: type1_count
+        description: "Number of type1 records"
+      - name: type2_count
+        description: "Number of type2 records"
+      - name: average_value
+        description: "Average value for the date"
