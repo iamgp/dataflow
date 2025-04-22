@@ -4,10 +4,14 @@ import pkgutil
 
 from dagster import Definitions, repository
 
+from dataflow.shared.logging import get_logger
+
 # Import the registry - ensuring workflows are registered when this module is loaded
 # We need to dynamically discover and import modules within the 'workflows' package
 # to trigger the @register_workflow decorators.
 from dataflow.workflows.registry import discover_workflows
+
+log = get_logger("dataflow.dagster_repo")
 
 # --- Dynamic Workflow Module Loading ---
 # Define the package path and prefix explicitly
@@ -15,7 +19,10 @@ from dataflow.workflows.registry import discover_workflows
 workflows_package_path = "dataflow/workflows"
 workflows_package_prefix = "dataflow.workflows."
 
-print(f"Attempting to discover workflow modules in: {workflows_package_path}")
+log.info(
+    f"Attempting to discover workflow modules in: {workflows_package_path}",
+    component="dagster_repo",
+)
 
 # Check if the directory exists to prevent pkgutil errors
 if os.path.isdir(workflows_package_path):
@@ -25,13 +32,21 @@ if os.path.isdir(workflows_package_path):
         [workflows_package_path], workflows_package_prefix
     ):
         try:
-            print(f"Importing workflow module: {module_name}")
+            log.debug(
+                f"Importing workflow module: {module_name}",
+                component="dagster_repo",
+            )
             importlib.import_module(module_name)
         except Exception as e:
-            print(f"Failed to import module {module_name}: {e}")
+            log.error(
+                f"Failed to import module {module_name}: {e}",
+                component="dagster_repo",
+                exc_info=True,
+            )
 else:
-    print(
-        f"Warning: Workflows directory not found at '{workflows_package_path}'. No workflow modules loaded."
+    log.warning(
+        f"Workflows directory not found at '{workflows_package_path}'. No workflow modules loaded.",
+        component="dagster_repo",
     )
 # --- End Dynamic Loading ---
 

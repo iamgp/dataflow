@@ -37,6 +37,33 @@ def run_docker_compose(args: list[str]):
         return False
 
 
+# Helper to validate service names
+def validate_services(service_names, all_flag, action_desc):
+    """
+    Validate service names and handle the --all flag.
+
+    Args:
+        service_names: Tuple of service names provided by the user
+        all_flag: Boolean indicating if --all flag was used
+        action_desc: Description of the action (for logging)
+
+    Returns:
+        tuple: (list of target services, boolean indicating validity)
+    """
+    target_services = []
+    if all_flag:
+        log.info(f"Will {action_desc} all services...")
+        return target_services, True
+    elif service_names:
+        target_services = list(service_names)
+        log.info(f"Will {action_desc} services: {', '.join(target_services)}...")
+        return target_services, True
+    else:
+        click.echo("Error: No services specified. Use service names or --all.")
+        log.error(f"No services specified for '{action_desc}' action.")
+        return [], False
+
+
 @click.group("service")
 def service_group():
     """Manage DATAFLOW services (via Docker Compose)."""
@@ -54,18 +81,12 @@ def start_services(service_names, all, detach):
     if detach:
         args.append("-d")
 
-    target_services = []
-    if all:
-        target_services = ["all"]
-        log.info("Starting all services...")
-    elif service_names:
-        target_services = list(service_names)
-        args.extend(target_services)
-        log.info(f"Starting services: {', '.join(target_services)}...")
-    else:
-        click.echo("Error: No services specified. Use service names or --all.")
-        log.error("No services specified for 'start' command.")
+    target_services, valid = validate_services(service_names, all, "start")
+    if not valid:
         return
+
+    if not all and target_services:
+        args.extend(target_services)
 
     run_docker_compose(args)
 
@@ -76,19 +97,13 @@ def start_services(service_names, all, detach):
 def stop_services(service_names, all):
     """Stop specified services or all services."""
     args = ["stop"]
-    target_services = []
-    if all:
-        target_services = ["all"]
-        log.info("Stopping all services...")
-        # No need to add service names if stopping all
-    elif service_names:
-        target_services = list(service_names)
-        args.extend(target_services)
-        log.info(f"Stopping services: {', '.join(target_services)}...")
-    else:
-        click.echo("Error: No services specified. Use service names or --all.")
-        log.error("No services specified for 'stop' command.")
+
+    target_services, valid = validate_services(service_names, all, "stop")
+    if not valid:
         return
+
+    if not all and target_services:
+        args.extend(target_services)
 
     run_docker_compose(args)
 
@@ -106,19 +121,39 @@ def service_status():
 def restart_services(service_names, all):
     """Restart specified services or all services."""
     args = ["restart"]
-    target_services = []
-    if all:
-        target_services = ["all"]
-        log.info("Restarting all services...")
-        # No need to add specific service names if restarting all
-    elif service_names:
-        target_services = list(service_names)
-        args.extend(target_services)
-        log.info(f"Restarting services: {', '.join(target_services)}...")
-    else:
-        click.echo("Error: No services specified. Use service names or --all.")
-        log.error("No services specified for 'restart' command.")
+
+    target_services, valid = validate_services(service_names, all, "restart")
+    if not valid:
         return
+
+    if not all and target_services:
+        args.extend(target_services)
+
+    run_docker_compose(args)
+
+
+@service_group.command("logs")
+@click.argument("service_names", nargs=-1)
+@click.option("--all", is_flag=True, help="Show logs for all services.")
+@click.option("-f", "--follow", is_flag=True, help="Follow log output.")
+@click.option(
+    "-t", "--tail", default="100", help="Number of lines to show from the end of the logs."
+)
+def service_logs(service_names, all, follow, tail):
+    """View logs for specified services."""
+    args = ["logs"]
+
+    if follow:
+        args.append("--follow")
+
+    args.extend(["--tail", tail])
+
+    target_services, valid = validate_services(service_names, all, "view logs for")
+    if not valid:
+        return
+
+    if not all and target_services:
+        args.extend(target_services)
 
     run_docker_compose(args)
 

@@ -4,6 +4,10 @@ from typing import BinaryIO
 from minio import Minio
 from minio.error import S3Error
 
+from dataflow.shared.logging import get_logger
+
+log = get_logger("dataflow.shared.minio")
+
 MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "localhost:9000")
 MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
@@ -21,13 +25,14 @@ def get_minio_client() -> Minio:
         )
         # Ping the server to check connectivity
         client.list_buckets()
+        log.info("Successfully connected to MinIO", endpoint=MINIO_ENDPOINT, secure=MINIO_SECURE)
         return client
     except S3Error as e:
-        print(f"Error connecting to Minio: {e}")
+        log.error("Error connecting to MinIO", error=str(e), endpoint=MINIO_ENDPOINT)
         raise
     except Exception as e:
         # Catch potential issues like DNS resolution errors
-        print(f"Could not initialize Minio client: {e}")
+        log.error("Could not initialize MinIO client", error=str(e), endpoint=MINIO_ENDPOINT)
         raise
 
 
@@ -36,11 +41,11 @@ def ensure_bucket_exists(client: Minio, bucket_name: str) -> None:
     try:
         if not client.bucket_exists(bucket_name):
             client.make_bucket(bucket_name)
-            print(f"Bucket '{bucket_name}' created.")
+            log.info("Bucket created", bucket_name=bucket_name)
         else:
-            print(f"Bucket '{bucket_name}' already exists.")
+            log.debug("Bucket already exists", bucket_name=bucket_name)
     except S3Error as e:
-        print(f"Error checking/creating bucket '{bucket_name}': {e}")
+        log.error("Error checking/creating bucket", bucket_name=bucket_name, error=str(e))
         raise
 
 
@@ -52,13 +57,32 @@ def upload_file(
     file_stream: BinaryIO | None = None,
     content_type: str = "application/octet-stream",
 ) -> None:
-    """Uploads a file or stream to a Minio bucket."""
+    """Uploads a file or stream to a Minio bucket.
+
+    Args:
+        client: Initialized Minio client
+        bucket_name: Name of the bucket to upload to
+        object_name: Name to give the object in the bucket
+        file_path: Local path to the file to upload (mutually exclusive with file_stream)
+        file_stream: Binary file-like object to upload (mutually exclusive with file_path)
+        content_type: MIME type of the file
+
+    Raises:
+        ValueError: If neither file_path nor file_stream is provided
+        S3Error: If there's an error during S3 operations
+    """
+    if not bucket_name or not object_name:
+        raise ValueError("bucket_name and object_name must not be empty")
+
     ensure_bucket_exists(client, bucket_name)
     try:
         if file_path:
             client.fput_object(bucket_name, object_name, file_path, content_type=content_type)
-            print(
-                f"'{file_path}' successfully uploaded as '{object_name}' to bucket '{bucket_name}'."
+            log.info(
+                "File successfully uploaded",
+                file_path=file_path,
+                object_name=object_name,
+                bucket_name=bucket_name,
             )
         elif file_stream:
             # Get stream size (required by put_object)
@@ -68,30 +92,94 @@ def upload_file(
             client.put_object(
                 bucket_name, object_name, file_stream, stream_size, content_type=content_type
             )
-            print(f"Stream successfully uploaded as '{object_name}' to bucket '{bucket_name}'.")
+            log.info(
+                "Stream successfully uploaded",
+                object_name=object_name,
+                bucket_name=bucket_name,
+                size_bytes=stream_size,
+            )
         else:
             raise ValueError("Either file_path or file_stream must be provided.")
 
     except S3Error as e:
-        print(f"Error uploading object '{object_name}' to bucket '{bucket_name}': {e}")
+        log.error(
+            "Error uploading object",
+            object_name=object_name,
+            bucket_name=bucket_name,
+            error=str(e),
+        )
         raise
 
 
 def download_file(client: Minio, bucket_name: str, object_name: str, file_path: str) -> None:
-    """Downloads an object from a Minio bucket to a local file."""
+    """Downloads an object from a Minio bucket to a local file.
+
+    Args:
+        client: Initialized Minio client
+        bucket_name: Name of the bucket containing the object
+        object_name: Name of the object to download
+        file_path: Local path where the object will be saved
+
+    Raises:
+        S3Error: If there's an error during S3 operations
+    """
+    if not bucket_name or not object_name or not file_path:
+        raise ValueError("bucket_name, object_name, and file_path must not be empty")
+
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
+
     try:
         client.fget_object(bucket_name, object_name, file_path)
-        print(f"Object '{object_name}' from bucket '{bucket_name}' downloaded to '{file_path}'.")
+        log.info(
+            "Object successfully downloaded",
+            object_name=object_name,
+            bucket_name=bucket_name,
+            file_path=file_path,
+        )
     except S3Error as e:
-        print(f"Error downloading object '{object_name}' from bucket '{bucket_name}': {e}")
+        log.error(
+            "Error downloading object",
+            object_name=object_name,
+            bucket_name=bucket_name,
+            file_path=file_path,
+            error=str(e),
+        )
         raise
 
 
 def list_objects(client: Minio, bucket_name: str, prefix: str | None = None) -> list[str]:
-    """Lists objects in a Minio bucket, optionally filtered by prefix."""
+    """Lists objects in a Minio bucket, optionally filtered by prefix.
+
+    Args:
+        client: Initialized Minio client
+        bucket_name: Name of the bucket to list objects from
+        prefix: Optional prefix to filter objects by
+
+    Returns:
+        List of object names in the bucket
+
+    Raises:
+        S3Error: If there's an error during S3 operations
+    """
+    if not bucket_name:
+        raise ValueError("bucket_name must not be empty")
+
     try:
         objects = client.list_objects(bucket_name, prefix=prefix, recursive=True)
-        return [obj.object_name for obj in objects if obj.object_name is not None]
+        result = [obj.object_name for obj in objects if obj.object_name is not None]
+        log.debug(
+            "Objects listed successfully",
+            bucket_name=bucket_name,
+            prefix=prefix,
+            count=len(result),
+        )
+        return result
     except S3Error as e:
-        print(f"Error listing objects in bucket '{bucket_name}': {e}")
-        raise  # Or return empty list?
+        log.error(
+            "Error listing objects",
+            bucket_name=bucket_name,
+            prefix=prefix,
+            error=str(e),
+        )
+        raise  # Raising the exception is better for error handling than returning an empty list

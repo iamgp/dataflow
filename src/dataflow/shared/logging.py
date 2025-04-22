@@ -7,6 +7,9 @@ import structlog
 import structlog.types
 from structlog.stdlib import BoundLogger
 
+# Track if logging has been configured
+_LOGGING_CONFIGURED = False
+
 # --- Structlog Processors --- #
 # These processors format the log record before it gets rendered.
 
@@ -21,10 +24,16 @@ def add_log_level_as_severity(
         "info": "INFO",
         "success": "INFO",
         "warning": "WARNING",
+        "warn": "WARNING",
         "error": "ERROR",
+        "exception": "ERROR",
         "critical": "CRITICAL",
+        "fatal": "CRITICAL",
+        "notice": "INFO",
     }
-    event_dict["severity"] = severity_map.get(method_name.lower(), "INFO")
+    # Get severity from map, defaulting to INFO for unknown levels
+    level = method_name.lower()
+    event_dict["severity"] = severity_map.get(level, "INFO")
     return event_dict
 
 
@@ -69,8 +78,25 @@ def setup_logging(
         log_file: Optional path to log file.
         component: Component name to add to log context.
     """
+    global _LOGGING_CONFIGURED
+    # Track if logging has been configured
+    if _LOGGING_CONFIGURED:
+        return
+    _LOGGING_CONFIGURED = True
+
     log_level_str = os.environ.get("LOG_LEVEL", level).upper()
-    log_level = getattr(logging, log_level_str, logging.INFO)
+    # Validate log level
+    valid_levels = {
+        "CRITICAL": logging.CRITICAL,
+        "ERROR": logging.ERROR,
+        "WARNING": logging.WARNING,
+        "INFO": logging.INFO,
+        "DEBUG": logging.DEBUG,
+    }
+    log_level = valid_levels.get(log_level_str, logging.INFO)
+    if log_level_str not in valid_levels:
+        print(f"WARNING: Invalid log level '{log_level_str}', defaulting to INFO")
+
     use_json = os.environ.get("LOG_JSON_FORMAT", str(json_logs)).lower() == "true"
 
     # Determine the final renderer
@@ -103,14 +129,24 @@ def setup_logging(
 
     # Add file handler if specified
     if log_file:
-        # Create logs directory if it doesn't exist
-        log_dir = os.path.dirname(log_file)
-        if log_dir:
-            os.makedirs(log_dir, exist_ok=True)
+        try:
+            # Create logs directory if it doesn't exist
+            log_dir = os.path.dirname(log_file)
+            if log_dir:
+                os.makedirs(log_dir, exist_ok=True)
 
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        handlers.append(file_handler)
+            from logging.handlers import RotatingFileHandler
+
+            file_handler = RotatingFileHandler(
+                log_file,
+                maxBytes=10 * 1024 * 1024,  # rotate when file >10 MB
+                backupCount=5,  # keep 5 archived logs
+            )
+            file_handler.setFormatter(formatter)
+            handlers.append(file_handler)
+        except (PermissionError, OSError) as e:
+            print(f"WARNING: Could not set up log file at '{log_file}': {e}")
+            # Continue without file logging
 
     # Configure root logger
     root_logger = logging.getLogger()

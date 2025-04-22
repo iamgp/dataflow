@@ -3,8 +3,8 @@
     "credentials": {
         "host": "db",
         "port": 5432,
-        "user": "postgres",
-        "password": "postgres",
+        "user": "${POSTGRES_USER}",
+        "password": "${POSTGRES_PASSWORD}",
         "database": "dataflow"
     },
     "template": "default",

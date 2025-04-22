@@ -11,7 +11,7 @@ description = "Modern, modular data warehouse platform"
 authors = [{ name = "Gareth Price", email = "garethprice@me.com" }]
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.11,<3.12"  # retain until dependencies are fully 3.12‑compatible
 dynamic = ["version"]
 
 # ---- Main dependencies ----
