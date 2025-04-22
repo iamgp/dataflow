@@ -154,3 +154,4 @@ ENV/
 env/
 env.bak/
 venv.bak/
+*.disabled

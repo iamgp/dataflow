@@ -3,7 +3,7 @@ import os
 import click
 
 # Import command groups
-from dataflow.cli.commands import service, workflow
+from dataflow.cli.commands import docs, service, workflow
 from dataflow.shared.logging import get_logger, setup_logging
 
 
@@ -32,6 +32,7 @@ def cli(log_level, log_json, log_file):
 # Add command groups
 cli.add_command(workflow.workflow_group)
 cli.add_command(service.service_group)
+cli.add_command(docs.docs_group)
 
 
 # Define the main entry point function required by pyproject.toml

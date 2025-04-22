@@ -3,6 +3,8 @@
 > **Data Architecture for Transformation, Analytics, File storage, Layered Orchestration, and Warehousing**
 
 [![CI](https://github.com/iamgp/dataflow/actions/workflows/ci.yml/badge.svg)](https://github.com/iamgp/dataflow/actions/workflows/ci.yml)
+[![Integration Tests](https://github.com/iamgp/dataflow/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/iamgp/dataflow/actions/workflows/integration-tests.yml)
+[![codecov](https://codecov.io/gh/iamgp/dataflow/branch/main/graph/badge.svg)](https://codecov.io/gh/iamgp/dataflow)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](docs/)
 [![License](https://img.shields.io/github/license/iamgp/dataflow)](LICENSE)
 
@@ -68,13 +70,21 @@ Prometheus[Prometheus: Monitoring]
    - `uv pip install -r requirements.txt` or `hatch run pip install .`
 
 3. **Start all services:**
-   `docker-compose up`
+
+   ```bash
+   # Using docker-compose directly
+   docker-compose up -d
+
+   # Or using the CLI (after installing)
+   python -m dataflow.cli service start --all -d
+   ```
 
 4. **Access the platform:**
    - Dagster UI: [localhost:3000](http://localhost:3000)
    - FastAPI docs: [localhost:8000/docs](http://localhost:8000/docs)
-   - Evidence dashboards: [localhost:9000](http://localhost:9000)
-   - Grafana: [localhost:3001](http://localhost:3001)
+   - Evidence dashboards: [localhost:9002](http://localhost:9002)
+   - Grafana: [localhost:3001](http://localhost:3001) (login: admin/admin)
+   - MinIO console: [localhost:9001](http://localhost:9001) (login: minioadmin/minioadmin)
 
 ---
 
@@ -91,25 +101,99 @@ Prometheus[Prometheus: Monitoring]
 
 ## 🛠️ Developer Guide
 
-- **Product Requirements:** See [`PRD.md`](PRD.md)
-- **Implementation Task List:** See [`TASKS.md`](TASKS.md)
-- **Docs:** See [`docs/`](docs/) or run `mkdocs serve`
-- **Workflow Authoring:** See the [Workflow Authoring Checklist](PRD.md#15-workflow-authoring-checklist)
-- **CLI Usage:** Run `python -m dataflow.cli --help` or see [CLI docs](docs/cli.md)
-- **Testing:** Run `pytest` (see [CI status](https://github.com/iamgp/dataflow/actions/workflows/ci.yml))
+- **Onboarding Guide:** [docs/onboarding.md](docs/onboarding.md)
+- **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md)
+- **Environment Variables:** [docs/environment_variables.md](docs/environment_variables.md)
+- **CLI Usage:** [docs/cli_usage.md](docs/cli_usage.md) or run `python -m dataflow.cli --help`
+- **Testing Guide:** [docs/testing.md](docs/testing.md)
+- **Workflow Authoring:** [docs/workflows.md](docs/workflows.md)
+- **Product Requirements:** [docs/prd.md](docs/prd.md)
+- **Implementation Task List:** [docs/tasks.md](docs/tasks.md)
+- **Full Documentation:** Run `mkdocs serve` to view all docs locally
+
+---
+
+## 📦 Service Management
+
+You can manage the services using either Docker Compose directly or the DATAFLOW CLI:
+
+### Using Docker Compose
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f <service_name>
+
+# Stop all services
+docker-compose down
+```
+
+### Using the CLI
+
+```bash
+# Start all services in background mode
+python -m dataflow.cli service start --all -d
+
+# Start specific services
+python -m dataflow.cli service start api dagster
+
+# Check status
+python -m dataflow.cli service status
+
+# View logs (follow mode)
+python -m dataflow.cli service logs -f api
+
+# Restart services
+python -m dataflow.cli service restart dagster
+
+# Stop all services
+python -m dataflow.cli service stop --all
+```
+
+---
+
+## 🧪 Testing
+
+DATAFLOW has comprehensive test coverage to ensure code quality and reliability:
+
+```bash
+# Run unit tests
+pytest -m "not integration"
+
+# Run integration tests (requires Docker Compose)
+INTEGRATION_TESTS=true pytest tests/integration/
+
+# Run tests with coverage report
+pytest --cov=src/dataflow
+
+# Run specific tests
+pytest tests/shared/test_logging.py
+```
+
+See the [Testing Guide](docs/testing.md) for more details on writing and running tests.
 
 ---
 
 ## 🤖 AI-Assisted Development
 
 We use AI tools (Cursor, GPT, Claude, Copilot, etc.) to accelerate development.
-See `PRD.md` and `TASKS.md` for project requirements and implementation planning.
+See `docs/prd.md` and `docs/tasks.md` for project requirements and implementation planning.
 
 ---
 
 ## 📚 Resources
 
-- [Product Requirements Document](PRD.md)
-- [Implementation Task List](TASKS.md)
-- [Official Docs](docs/)
+- [Onboarding Guide](docs/onboarding.md)
+- [Troubleshooting Guide](docs/troubleshooting.md)
+- [Environment Variables](docs/environment_variables.md)
+- [CLI Usage](docs/cli_usage.md)
+- [Testing Guide](docs/testing.md)
+- [Workflow Authoring](docs/workflows.md)
+- [Product Requirements](docs/prd.md)
+- [Implementation Task List](docs/tasks.md)
 - [GitHub Actions CI](https://github.com/iamgp/dataflow/actions)
