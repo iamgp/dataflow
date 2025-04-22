@@ -178,7 +178,7 @@ def test_create_bucket(mock_get_client):
 
 @patch("dataflow.shared.minio.get_minio_client")
 def test_create_bucket_already_exists(mock_get_client):
-    """Test that create_bucket doesnt create a bucket if it already exists."""
+    """Test that create_bucket doesn't create a bucket if it already exists."""
     # Setup mock
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
