@@ -48,12 +48,9 @@ def run_mkdocs_server(background=False):
     cmd = ["mkdocs", "serve"]
 
     if background:
-        cmd = ["nohup"] + cmd + ["&"]
         log.info("Starting documentation server in background at http://127.0.0.1:8000")
         try:
-            subprocess.Popen(
-                " ".join(cmd), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             click.echo("Documentation server started in background at http://127.0.0.1:8000")
         except Exception as e:
             log.error(f"Failed to start documentation server: {e}")
@@ -162,8 +159,19 @@ def stop_services(service_names, all):
         click.echo("Stopping documentation server...")
         # Find and stop the documentation server process
         try:
-            # On Unix-like systems, find and kill the mkdocs process
-            subprocess.run(["pkill", "-f", "mkdocs serve"], check=False)
+            # Platform-agnostic way to find and terminate processes
+            import psutil
+
+            for proc in psutil.process_iter():
+                try:
+                    # Check if the process command line contains "mkdocs serve"
+                    if (
+                        "mkdocs" in proc.name().lower()
+                        and "serve" in " ".join(proc.cmdline()).lower()
+                    ):
+                        proc.terminate()
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
             click.echo("Documentation server stopped.")
         except Exception as e:
             log.error(f"Failed to stop documentation server: {e}")
@@ -178,11 +186,20 @@ def service_status():
 
     # Check documentation server status
     try:
-        # On Unix-like systems, check if mkdocs is running
-        result = subprocess.run(
-            ["pgrep", "-f", "mkdocs serve"], capture_output=True, text=True, check=False
-        )
-        if result.returncode == 0:
+        # Platform-agnostic way to check if mkdocs is running
+        import psutil
+
+        mkdocs_running = False
+        for proc in psutil.process_iter():
+            try:
+                # Check if the process command line contains "mkdocs serve"
+                if "mkdocs" in proc.name().lower() and "serve" in " ".join(proc.cmdline()).lower():
+                    mkdocs_running = True
+                    break
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+
+        if mkdocs_running:
             click.echo("Documentation server: Running (http://127.0.0.1:8000)")
         else:
             click.echo("Documentation server: Stopped")
@@ -217,7 +234,19 @@ def restart_services(service_names, all):
 
         # Stop the documentation server if it's running
         try:
-            subprocess.run(["pkill", "-f", "mkdocs serve"], check=False)
+            # Platform-agnostic way to find and terminate processes
+            import psutil
+
+            for proc in psutil.process_iter():
+                try:
+                    # Check if the process command line contains "mkdocs serve"
+                    if (
+                        "mkdocs" in proc.name().lower()
+                        and "serve" in " ".join(proc.cmdline()).lower()
+                    ):
+                        proc.terminate()
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
         except Exception:
             pass
 
