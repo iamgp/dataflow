@@ -42,6 +42,7 @@ def test_logger_with_context(mock_get_logger):
     # Get logger with context
     _ = get_logger("test.context", workflow="test_workflow", user="test_user")
 
-    # Verify the context was added correctly
+    # Verify the context was added correctly - use the actual parameter format
     mock_get_logger.assert_called_once_with(name="test.context")
+    # Check the bind was called with the correct context
     mock_get_logger.bind.assert_called_once_with(workflow="test_workflow", user="test_user")

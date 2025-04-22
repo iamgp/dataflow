@@ -77,11 +77,14 @@ def setup_logging(
         json_logs: Whether to output logs in JSON format.
         log_file: Optional path to log file.
         component: Component name to add to log context.
+
+    Returns:
+        A structured logger instance
     """
     global _LOGGING_CONFIGURED
     # Track if logging has been configured
     if _LOGGING_CONFIGURED:
-        return
+        return get_logger(f"dataflow.{component}")
     _LOGGING_CONFIGURED = True
 
     log_level_str = os.environ.get("LOG_LEVEL", level).upper()
@@ -163,6 +166,9 @@ def setup_logging(
     structlog.contextvars.clear_contextvars()
     structlog.contextvars.bind_contextvars(component=component)
 
+    # Return a logger instance
+    return get_logger(f"dataflow.{component}")
+
 
 # Create a convenience function to get a logger with context
 def get_logger(name: str | None = None, **context) -> BoundLogger:
@@ -175,7 +181,7 @@ def get_logger(name: str | None = None, **context) -> BoundLogger:
     Returns:
         A structured logger
     """
-    logger = structlog.get_logger(name)
+    logger = structlog.get_logger(name=name)
     if context:
         return logger.bind(**context)
     return logger

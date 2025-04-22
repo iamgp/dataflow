@@ -32,33 +32,58 @@ jobs:
         run: uv python install
 
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: |
+          uv sync --all-extras --dev
+          # Install psutil for process management
+          uv pip install psutil
 
       - name: Set up Docker Compose
         run: |
+          # Check Docker and Docker Compose versions
+          docker --version
+          docker-compose --version
+
+          # Pull and build images
           docker-compose pull
           docker-compose build
           docker-compose up -d
 
       - name: Wait for services to start
         run: |
-          # Simple sleep to allow services to initialize
-          sleep 10
+          # More time to allow services to initialize properly
+          echo "Waiting for services to start up..."
+          sleep 30
 
-          # Verify services are running
+          # Show the status of services
+          echo "Docker services status:"
           docker-compose ps
 
+          # Check if API service is ready
+          echo "Checking API health..."
+          curl -v http://localhost:8000/health/ || echo "API health check failed (expected during startup)"
+
+          # Check if MinIO service is ready
+          echo "Checking MinIO service..."
+          curl -v http://localhost:9000/minio/health/ready || echo "MinIO health check failed (expected during startup)"
+
       - name: Run integration tests
-        run: uv run pytest tests/integration -v
+        run: |
+          echo "Running integration tests..."
+          INTEGRATION_TESTS=true START_DOCKER_SERVICES=false uv run pytest tests/integration -v
         env:
           CI: true
-          INTEGRATION_TESTS: true
-          START_DOCKER_SERVICES: "false"  # Services are already started
 
       - name: Dump docker logs on failure
         if: failure()
         run: |
+          echo "Docker service logs:"
           docker-compose logs
+
+          echo "API service logs:"
+          docker-compose logs api
+
+          echo "MinIO service logs:"
+          docker-compose logs minio
 
       - name: Clean up
         run: docker-compose down

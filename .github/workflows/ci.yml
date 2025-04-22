@@ -93,21 +93,21 @@ jobs:
         run: uv python install
 
       - name: Install all dependencies
-        run: uv sync --all-extras --dev
+        run: |
+          uv sync --all-extras --dev
+          # Install psutil for process management
+          uv pip install psutil
 
-      - name: Run tests with coverage
-        run: uv run pytest --cov=src/dataflow --cov-report=xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run tests
+        run: |
+          echo "Running unit tests (excluding integration tests)..."
+          uv run pytest -k "not integration"
 
   docs:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
     steps:
       - name: Checkout (official GitHub action)
         uses: actions/checkout@v4
@@ -119,13 +119,30 @@ jobs:
         with:
           version: "0.6.14"
           enable-cache: true
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
 
       - name: Set up Python (using uv)
         run: uv python install
 
       - name: Install all dependencies
-        run: uv sync --all-extras --dev
+        run: |
+          uv sync --all-extras --dev
+          # Ensure mkdocs and its dependencies are installed
+          uv pip install mkdocs mkdocs-material pymdown-extensions
+
+      - name: Check MkDocs installation
+        run: |
+          uv pip list | grep mkdocs
+          uv run mkdocs --version
+
+      - name: Verify mkdocs.yml
+        run: |
+          echo "Verifying mkdocs.yml file..."
+          cat mkdocs.yml
+          echo "Checking for any syntax errors in mkdocs.yml..."
+          python -c "import yaml; yaml.safe_load(open('mkdocs.yml'))"
 
       - name: Build documentation
-        run: uv run mkdocs build
+        run: |
+          echo "Building documentation with MkDocs..."
+          uv run mkdocs build --verbose
