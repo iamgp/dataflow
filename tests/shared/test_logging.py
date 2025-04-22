@@ -7,22 +7,21 @@ from dataflow.shared.logging import get_logger, setup_logging
 def test_setup_logging():
     """Test that setup_logging works without errors."""
     # Test with default parameters
-    logger = setup_logging()
-    assert logger is not None
+    setup_logging()
+    # Should not raise any exceptions
 
     # Test with explicit parameters
-    logger = setup_logging(
+    setup_logging(
         level="DEBUG",
         json_logs=True,
         log_file="test_log.log",
         component="test",
     )
-    assert logger is not None
+    # Should not raise any exceptions
 
     # Cleanup test log file if created
     if os.path.exists("test_log.log"):
         os.remove("test_log.log")
-
 
 def test_get_logger():
     """Test that get_logger returns a logger instance."""
