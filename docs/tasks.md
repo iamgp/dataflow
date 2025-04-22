@@ -134,9 +134,9 @@ This list is exhaustive and strategic, with context and considerations for each 
 
 ## 4. Workflow System Foundation
 
-- [ ] **4.1 Workflow Directory Template**
+- [x] **4.1 Workflow Directory Template**
 
-  - [ ] Create template workflow directory with:
+  - [x] Create template workflow directory with:
     - `ingestion.py` (data extraction)
     - `transform.py` (data transformation)
     - `assets.py` (Dagster assets/resources, optional)
@@ -145,19 +145,19 @@ This list is exhaustive and strategic, with context and considerations for each 
     - `dbt/` (DBT models)
     - `evidence/` (Evidence dashboards)
     - `tests/` (unit/integration tests)
-  - [ ] Add example workflow (e.g., `nightscout`) using the template.
-  - [ ] Document naming conventions and required files for workflows.
+  - [x] Add example workflow (e.g., `nightscout`) using the template.
+  - [x] Document naming conventions and required files for workflows.
 
-- [ ] **4.2 Workflow Registry Integration**
+- [x] **4.2 Workflow Registry Integration**
 
-  - [ ] Ensure all workflows are registered via the decorator and discoverable by Dagster and CLI.
-  - [ ] Add CLI commands to list, run, and check status of workflows.
-  - [ ] Add API endpoints to list and trigger workflows.
+  - [x] Ensure all workflows are registered via the decorator and discoverable by Dagster and CLI.
+  - [x] Add CLI commands to list, run, and check status of workflows.
+  - [x] Add API endpoints to list and trigger workflows.
 
-- [ ] **4.3 Workflow Configuration**
-  - [ ] Implement per-workflow `config.yaml` loading and validation.
-  - [ ] Add CLI and API endpoints to validate and display workflow configs.
-  - [ ] Document config schema and validation rules.
+- [x] **4.3 Workflow Configuration**
+  - [x] Implement per-workflow `config.yaml` loading and validation.
+  - [x] Add CLI and API endpoints to validate and display workflow configs.
+  - [x] Document config schema and validation rules.
 
 ---
 
