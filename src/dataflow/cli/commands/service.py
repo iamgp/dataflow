@@ -1,6 +1,7 @@
 import subprocess  # Needed for docker-compose calls
 
 import click
+import psutil  # Used for managing non-Docker services
 
 from dataflow.shared.logging import log
 
@@ -160,8 +161,6 @@ def stop_services(service_names, all):
         # Find and stop the documentation server process
         try:
             # Platform-agnostic way to find and terminate processes
-            import psutil
-
             for proc in psutil.process_iter():
                 try:
                     # Check if the process command line contains "mkdocs serve"
@@ -187,8 +186,6 @@ def service_status():
     # Check documentation server status
     try:
         # Platform-agnostic way to check if mkdocs is running
-        import psutil
-
         mkdocs_running = False
         for proc in psutil.process_iter():
             try:
@@ -235,8 +232,6 @@ def restart_services(service_names, all):
         # Stop the documentation server if it's running
         try:
             # Platform-agnostic way to find and terminate processes
-            import psutil
-
             for proc in psutil.process_iter():
                 try:
                     # Check if the process command line contains "mkdocs serve"

@@ -23,6 +23,7 @@ def test_setup_logging():
     if os.path.exists("test_log.log"):
         os.remove("test_log.log")
 
+
 def test_get_logger():
     """Test that get_logger returns a logger instance."""
     logger = get_logger("test.logger")

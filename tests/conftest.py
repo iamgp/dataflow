@@ -50,7 +50,7 @@ def docker_services():
 
         # Start services
         result = subprocess.run(
-            f"cd {PROJECT_ROOT} && docker-compose up -d", shell=True, capture_output=True, text=True
+            "docker-compose up -d", shell=True, capture_output=True, text=True, cwd=PROJECT_ROOT
         )
         if result.returncode != 0:
             pytest.skip(f"Failed to start Docker Compose services: {result.stderr}")
@@ -61,10 +61,7 @@ def docker_services():
         except Exception as e:
             # Stop services if they failed to start properly
             subprocess.run(
-                f"cd {PROJECT_ROOT} && docker-compose down",
-                shell=True,
-                capture_output=True,
-                text=True,
+                "docker-compose down", shell=True, capture_output=True, text=True, cwd=PROJECT_ROOT
             )
             pytest.skip(f"Services failed to start: {str(e)}")
 
@@ -74,7 +71,7 @@ def docker_services():
     # Clean up if needed
     if os.environ.get("STOP_DOCKER_SERVICES", "false").lower() == "true":
         subprocess.run(
-            f"cd {PROJECT_ROOT} && docker-compose down", shell=True, capture_output=True, text=True
+            "docker-compose down", shell=True, capture_output=True, text=True, cwd=PROJECT_ROOT
         )
 
 
