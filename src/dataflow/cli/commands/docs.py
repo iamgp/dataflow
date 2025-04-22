@@ -29,7 +29,7 @@ def build(clean):
         logger.info("Documentation built successfully")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to build documentation: {e}")
-        raise click.ClickException(f"Documentation build failed: {e}")
+        raise click.ClickException(f"Documentation build failed: {e}") from e
 
 
 @docs_group.command("serve")
@@ -54,7 +54,7 @@ def serve(dev_addr, livereload, dbt, background):
             # For background mode, redirect output to /dev/null
             cmd = ["nohup"] + cmd + ["&"]
             logger.info(f"Starting DBT documentation server in background at http://{dev_addr}")
-            process = subprocess.Popen(
+            subprocess.Popen(
                 " ".join(cmd), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
             click.echo(f"DBT documentation server started in background at http://{dev_addr}")
@@ -65,7 +65,7 @@ def serve(dev_addr, livereload, dbt, background):
                 subprocess.run(cmd)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Failed to serve DBT documentation: {e}")
-                raise click.ClickException(f"Failed to serve DBT documentation: {e}")
+                raise click.ClickException(f"Failed to serve DBT documentation: {e}") from e
     else:
         logger.info("Serving MkDocs documentation")
         cmd = ["mkdocs", "serve"]
@@ -80,7 +80,7 @@ def serve(dev_addr, livereload, dbt, background):
             # For background mode, redirect output to /dev/null
             cmd = ["nohup"] + cmd + ["&"]
             logger.info(f"Starting documentation server in background at http://{dev_addr}")
-            process = subprocess.Popen(
+            subprocess.Popen(
                 " ".join(cmd), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
             click.echo(f"Documentation server started in background at http://{dev_addr}")
@@ -91,7 +91,7 @@ def serve(dev_addr, livereload, dbt, background):
                 subprocess.run(cmd)
             except subprocess.CalledProcessError as e:
                 logger.error(f"Failed to serve documentation: {e}")
-                raise click.ClickException(f"Documentation server failed: {e}")
+                raise click.ClickException(f"Documentation server failed: {e}") from e
 
 
 @docs_group.command("new")

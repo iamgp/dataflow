@@ -51,7 +51,7 @@ def run_mkdocs_server(background=False):
         cmd = ["nohup"] + cmd + ["&"]
         log.info("Starting documentation server in background at http://127.0.0.1:8000")
         try:
-            process = subprocess.Popen(
+            subprocess.Popen(
                 " ".join(cmd), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
             click.echo("Documentation server started in background at http://127.0.0.1:8000")
