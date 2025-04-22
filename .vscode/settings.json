@@ -15,7 +15,7 @@
     },
     "[dockercompose]": {
         "editor.autoIndent": "advanced",
-        "editor.defaultFormatter": "redhat.vscode-yaml",
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
         "editor.insertSpaces": true,
         "editor.quickSuggestions": {
