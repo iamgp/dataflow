@@ -122,13 +122,13 @@ This list is exhaustive and strategic, with context and considerations for each 
   - [x] Add badge(s) to `README.md` for build status, coverage.
   - [x] Document how to run tests locally and in CI.
 
-- [ ] **3.3 Documentation**
-  - [ ] Set up MkDocs with navigation, architecture diagrams, and workflow authoring guide.
-  - [ ] Add API docs (link to FastAPI `/docs`).
-  - [ ] Add CLI usage docs (with examples).
-  - [ ] Add workflow authoring checklist and templates.
-  - [ ] Add sequence diagrams for key workflows.
-  - [ ] Document how to add new workflows, DBT models, Evidence dashboards.
+- [x] **3.3 Documentation**
+  - [x] Set up MkDocs with navigation, architecture diagrams, and workflow authoring guide.
+  - [x] Add API docs (link to FastAPI `/docs`).
+  - [x] Add CLI usage docs (with examples).
+  - [x] Add workflow authoring checklist and templates.
+  - [x] Add sequence diagrams for key workflows.
+  - [x] Document how to add new workflows, DBT models, Evidence dashboards.
 
 ---
 
