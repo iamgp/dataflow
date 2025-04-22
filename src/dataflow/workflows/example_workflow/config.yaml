@@ -1,0 +1,44 @@
+# Example Workflow Configuration
+
+# Data Source Configuration
+source:
+  name: "example_data_source"
+  type: "mock" # Default to mock for easy testing
+  # API settings (when type is "api")
+  api:
+    url: "https://api.example.com/data"
+    method: "GET"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer ${API_TOKEN}" # Environment variable
+    params:
+      limit: 100
+  # Mock settings (when type is "mock")
+  mock:
+    count: 20 # Number of mock records to generate
+
+# Data Processing Configuration
+processing:
+  batch_size: 100
+  error_handling:
+    skip_invalid: true
+    log_errors: true
+
+# Output Configuration
+output:
+  db_table: "example_processed_data"
+  file:
+    enabled: true
+    path: "/data/output/example_output.parquet"
+    format: "parquet"
+
+# Schedule Configuration
+schedule:
+  cron: "0 * * * *" # Every hour
+  timezone: "UTC"
+
+# Enable/disable features
+features:
+  data_validation: true
+  notifications: true
+  archiving: false

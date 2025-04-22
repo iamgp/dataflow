@@ -5,7 +5,7 @@ from contextvars import ContextVar
 import structlog
 from fastapi import FastAPI, Request
 
-from dataflow.api.routers import data, health, logs, workflows
+from dataflow.api.routers import configs, data, health, logs, workflows
 from dataflow.shared.logging import log, setup_logging
 
 # Call setup_logging early, before defining the app or routes
@@ -64,6 +64,7 @@ async def log_requests(request: Request, call_next):
 # Include routers
 app.include_router(health.router)
 app.include_router(workflows.router)
+app.include_router(configs.router)
 app.include_router(data.router)
 app.include_router(logs.router)
 

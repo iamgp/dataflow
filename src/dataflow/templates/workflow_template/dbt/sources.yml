@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw_data
+    description: "Raw data source tables"
+    schema: "{{ target.schema }}"
+    tables:
+      - name: raw_workflow_data
+        description: "Raw data extracted from the source"
+        columns:
+          - name: id
+            description: "Unique identifier for the record"
+            tests:
+              - unique
+              - not_null
+          - name: timestamp
+            description: "When the record was created"
+          - name: value
+            description: "The main data value"
+          - name: type
+            description: "The type of record"
+          - name: raw_json
+            description: "The original JSON data"
