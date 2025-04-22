@@ -21,6 +21,7 @@ def test_api_health(docker_services):
     max_retries = 5
     retry_delay = 2  # seconds
 
+    response = None
     for attempt in range(max_retries):
         try:
             response = requests.get("http://localhost:8000/health/", timeout=5)
@@ -28,10 +29,12 @@ def test_api_health(docker_services):
         except (requests.ConnectionError, requests.Timeout):
             if attempt < max_retries - 1:
                 import time
+
                 time.sleep(retry_delay)
             else:
                 pytest.fail(f"Failed to connect to API after {max_retries} attempts")
 
+    assert response is not None, "No response received from API"
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
