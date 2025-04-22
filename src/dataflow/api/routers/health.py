@@ -13,8 +13,10 @@ router = APIRouter(
 )
 
 
+from dataflow.api import health_check as base_health_check
+
 @router.get("/", response_model=HealthResponse)
 def health_check():
     """Check the health of the API."""
     # In the future, this could check database connections, etc.
-    return HealthResponse(status="ok")
+    return base_health_check()
