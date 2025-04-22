@@ -102,7 +102,7 @@ def wait_for_services():
         wait_for_minio()
         # Add more service checks as needed
     except Exception as e:
-        raise Exception(f"Services failed to start: {str(e)}")
+        raise Exception(f"Services failed to start: {str(e)}") from e
 
 
 @pytest.fixture
