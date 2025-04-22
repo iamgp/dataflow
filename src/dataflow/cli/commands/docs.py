@@ -36,7 +36,8 @@ def build(clean):
 @click.option("--dev-addr", default="127.0.0.1:8000", help="Development server address")
 @click.option("--livereload", is_flag=True, default=True, help="Enable live reloading")
 @click.option("--dbt", is_flag=True, help="Serve DBT documentation")
-def serve(dev_addr, livereload, dbt):
+@click.option("-d", "--background", is_flag=True, help="Run in background (detached) mode")
+def serve(dev_addr, livereload, dbt, background):
     """Serve the documentation for local viewing."""
     if dbt:
         logger.info("Serving DBT documentation")
@@ -48,12 +49,23 @@ def serve(dev_addr, livereload, dbt):
 
         # Use Python's built-in HTTP server to serve DBT docs
         cmd = ["python", "-m", "http.server", "-d", "target", dev_addr.split(":")[1]]
-        try:
-            logger.info(f"Serving DBT documentation at http://{dev_addr}")
-            subprocess.run(cmd)
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to serve DBT documentation: {e}")
-            raise click.ClickException(f"Failed to serve DBT documentation: {e}")
+
+        if background:
+            # For background mode, redirect output to /dev/null
+            cmd = ["nohup"] + cmd + ["&"]
+            logger.info(f"Starting DBT documentation server in background at http://{dev_addr}")
+            process = subprocess.Popen(
+                " ".join(cmd), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            click.echo(f"DBT documentation server started in background at http://{dev_addr}")
+            return
+        else:
+            try:
+                logger.info(f"Serving DBT documentation at http://{dev_addr}")
+                subprocess.run(cmd)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to serve DBT documentation: {e}")
+                raise click.ClickException(f"Failed to serve DBT documentation: {e}")
     else:
         logger.info("Serving MkDocs documentation")
         cmd = ["mkdocs", "serve"]
@@ -64,12 +76,22 @@ def serve(dev_addr, livereload, dbt):
         if not livereload:
             cmd.append("--no-livereload")
 
-        try:
-            logger.info(f"Serving documentation at http://{dev_addr}")
-            subprocess.run(cmd)
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to serve documentation: {e}")
-            raise click.ClickException(f"Documentation server failed: {e}")
+        if background:
+            # For background mode, redirect output to /dev/null
+            cmd = ["nohup"] + cmd + ["&"]
+            logger.info(f"Starting documentation server in background at http://{dev_addr}")
+            process = subprocess.Popen(
+                " ".join(cmd), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            click.echo(f"Documentation server started in background at http://{dev_addr}")
+            return
+        else:
+            try:
+                logger.info(f"Serving documentation at http://{dev_addr}")
+                subprocess.run(cmd)
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to serve documentation: {e}")
+                raise click.ClickException(f"Documentation server failed: {e}")
 
 
 @docs_group.command("new")

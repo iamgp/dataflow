@@ -37,6 +37,39 @@ def run_docker_compose(args: list[str]):
         return False
 
 
+# List of services that are not part of docker-compose but can be managed by the CLI
+NON_DOCKER_SERVICES = ["docs"]
+
+
+# Helper to run the mkdocs server
+def run_mkdocs_server(background=False):
+    """Start the MkDocs documentation server"""
+    log.info("Starting documentation server...")
+    cmd = ["mkdocs", "serve"]
+
+    if background:
+        cmd = ["nohup"] + cmd + ["&"]
+        log.info("Starting documentation server in background at http://127.0.0.1:8000")
+        try:
+            process = subprocess.Popen(
+                " ".join(cmd), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            click.echo("Documentation server started in background at http://127.0.0.1:8000")
+        except Exception as e:
+            log.error(f"Failed to start documentation server: {e}")
+            click.echo(f"Error starting documentation server: {e}")
+    else:
+        log.info("Starting documentation server at http://127.0.0.1:8000")
+        try:
+            subprocess.run(cmd)
+        except subprocess.CalledProcessError as e:
+            log.error(f"Failed to start documentation server: {e}")
+            click.echo(f"Error starting documentation server: {e}")
+        except KeyboardInterrupt:
+            log.info("Documentation server stopped by user")
+            click.echo("Documentation server stopped by user")
+
+
 # Helper to validate service names
 def validate_services(service_names, all_flag, action_desc):
     """
@@ -77,18 +110,30 @@ def service_group():
 @click.option("-d", "--detach", is_flag=True, help="Run in detached mode.")
 def start_services(service_names, all, detach):
     """Start specified services or all services."""
-    args = ["up"]
-    if detach:
-        args.append("-d")
-
     target_services, valid = validate_services(service_names, all, "start")
     if not valid:
         return
 
-    if not all and target_services:
-        args.extend(target_services)
+    # Filter out non-docker services
+    docker_services = [svc for svc in target_services if svc not in NON_DOCKER_SERVICES]
+    non_docker_services = [svc for svc in target_services if svc in NON_DOCKER_SERVICES]
 
-    run_docker_compose(args)
+    # Start Docker Compose services if any
+    if all or docker_services:
+        args = ["up"]
+        if detach:
+            args.append("-d")
+
+        if not all and docker_services:
+            args.extend(docker_services)
+
+        run_docker_compose(args)
+
+    # Start documentation server if requested
+    if all or "docs" in non_docker_services:
+        # Always run docs in background mode if detach is True or if other services are started
+        background_mode = detach or all or (len(target_services) > 1)
+        run_mkdocs_server(background=background_mode)
 
 
 @service_group.command("stop")
@@ -96,16 +141,33 @@ def start_services(service_names, all, detach):
 @click.option("--all", is_flag=True, help="Stop all services.")
 def stop_services(service_names, all):
     """Stop specified services or all services."""
-    args = ["stop"]
-
     target_services, valid = validate_services(service_names, all, "stop")
     if not valid:
         return
 
-    if not all and target_services:
-        args.extend(target_services)
+    # Filter out non-docker services
+    docker_services = [svc for svc in target_services if svc not in NON_DOCKER_SERVICES]
+    non_docker_services = [svc for svc in target_services if svc in NON_DOCKER_SERVICES]
 
-    run_docker_compose(args)
+    # Stop Docker Compose services if any
+    if all or docker_services:
+        args = ["stop"]
+        if not all and docker_services:
+            args.extend(docker_services)
+        run_docker_compose(args)
+
+    # Stop documentation server if requested
+    if all or "docs" in non_docker_services:
+        log.info("Stopping documentation server...")
+        click.echo("Stopping documentation server...")
+        # Find and stop the documentation server process
+        try:
+            # On Unix-like systems, find and kill the mkdocs process
+            subprocess.run(["pkill", "-f", "mkdocs serve"], check=False)
+            click.echo("Documentation server stopped.")
+        except Exception as e:
+            log.error(f"Failed to stop documentation server: {e}")
+            click.echo(f"Error stopping documentation server: {e}")
 
 
 @service_group.command("status")
@@ -114,22 +176,53 @@ def service_status():
     log.info("Checking service status...")
     run_docker_compose(["ps"])
 
+    # Check documentation server status
+    try:
+        # On Unix-like systems, check if mkdocs is running
+        result = subprocess.run(
+            ["pgrep", "-f", "mkdocs serve"], capture_output=True, text=True, check=False
+        )
+        if result.returncode == 0:
+            click.echo("Documentation server: Running (http://127.0.0.1:8000)")
+        else:
+            click.echo("Documentation server: Stopped")
+    except Exception as e:
+        log.error(f"Failed to check documentation server status: {e}")
+
 
 @service_group.command("restart")
 @click.argument("service_names", nargs=-1)
 @click.option("--all", is_flag=True, help="Restart all services.")
 def restart_services(service_names, all):
     """Restart specified services or all services."""
-    args = ["restart"]
-
     target_services, valid = validate_services(service_names, all, "restart")
     if not valid:
         return
 
-    if not all and target_services:
-        args.extend(target_services)
+    # Filter out non-docker services
+    docker_services = [svc for svc in target_services if svc not in NON_DOCKER_SERVICES]
+    non_docker_services = [svc for svc in target_services if svc in NON_DOCKER_SERVICES]
 
-    run_docker_compose(args)
+    # Restart Docker Compose services if any
+    if all or docker_services:
+        args = ["restart"]
+        if not all and docker_services:
+            args.extend(docker_services)
+        run_docker_compose(args)
+
+    # Restart documentation server if requested
+    if all or "docs" in non_docker_services:
+        log.info("Restarting documentation server...")
+        click.echo("Restarting documentation server...")
+
+        # Stop the documentation server if it's running
+        try:
+            subprocess.run(["pkill", "-f", "mkdocs serve"], check=False)
+        except Exception:
+            pass
+
+        # Start the documentation server again
+        run_mkdocs_server(background=True)
 
 
 @service_group.command("logs")
@@ -152,7 +245,17 @@ def service_logs(service_names, all, follow, tail):
     if not valid:
         return
 
-    if not all and target_services:
-        args.extend(target_services)
+    # Filter out non-docker services
+    docker_services = [svc for svc in target_services if svc not in NON_DOCKER_SERVICES]
+    non_docker_services = [svc for svc in target_services if svc in NON_DOCKER_SERVICES]
 
-    run_docker_compose(args)
+    # Display warning for non-Docker services
+    if non_docker_services:
+        click.echo(
+            f"Note: Logs for non-Docker services ({', '.join(non_docker_services)}) are not available through this command."
+        )
+
+    if all or docker_services:
+        if not all and docker_services:
+            args.extend(docker_services)
+        run_docker_compose(args)
