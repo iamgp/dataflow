@@ -170,12 +170,12 @@ This list is exhaustive and strategic, with context and considerations for each 
   - [x] Add error handling, retries, and logging for ingestion.
   - [x] Document how to add new data sources.
 
-- [ ] **5.2 Transformation Framework**
+- [x] **5.2 Transformation Framework**
 
-  - [ ] Implement shared transformation utilities (data cleaning, mapping, enrichment) in `src/dataflow/shared/`.
-  - [ ] Implement sample transformation logic in `transform.py` for the example workflow.
-  - [ ] Add error handling, validation, and logging for transformation.
-  - [ ] Document how to add new transformation steps.
+  - [x] Implement shared transformation utilities (data cleaning, mapping, enrichment) in `src/dataflow/shared/`.
+  - [x] Implement sample transformation logic in `transform.py` for the example workflow.
+  - [x] Add error handling, validation, and logging for transformation.
+  - [x] Document how to add new transformation steps.
 
 - [ ] **5.3 Asset & Job Definition**
 

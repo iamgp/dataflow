@@ -12,6 +12,7 @@ profile_enabled: true # Whether to fetch profile data
 # Storage settings
 bucket_name: "nightscout-raw" # Minio bucket for raw data
 local_save_path: "data/nightscout/raw" # Optional local path to save data
+transformed_bucket_name: "nightscout-transformed" # Minio bucket for transformed data
 
 # Transformation settings
 normalize_timestamps: true # Standardize timestamp formats
