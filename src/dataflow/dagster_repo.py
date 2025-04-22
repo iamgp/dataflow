@@ -2,7 +2,7 @@ import importlib
 import os
 import pkgutil
 
-from dagster import Definitions, repository
+from dagster import Definitions, JobDefinition, repository
 
 from dataflow.shared.logging import get_logger
 
@@ -55,8 +55,8 @@ else:
 @repository
 def dataflow_repo():
     """Main repository for all DATAFLOW workflows."""
-    # Discover workflows that were registered
-    discovered_jobs = discover_workflows()
+    # Discover workflows that were registered and ensure they're JobDefinitions
+    discovered_jobs: list[JobDefinition] = discover_workflows()
 
     # The @repository decorator expects a list/dict of definitions
     # TODO: Add resources, schedules, sensors as needed
@@ -66,7 +66,7 @@ def dataflow_repo():
 # Keep the Definitions object for potential non-repo deployment contexts
 # or for loading assets/resources/schedules/sensors centrally
 definitions = Definitions(
-    jobs=discover_workflows(),
+    jobs=discover_workflows(),  # This should now properly type check
     # resources={},
     # schedules={},
     # sensors={},
