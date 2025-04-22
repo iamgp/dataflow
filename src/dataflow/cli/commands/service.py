@@ -156,6 +156,3 @@ def service_logs(service_names, all, follow, tail):
         args.extend(target_services)
 
     run_docker_compose(args)
-
-
-# TODO: Add commands for logs, restart, etc.

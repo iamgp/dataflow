@@ -20,9 +20,25 @@ Docker Compose allows you to run all the services required for Dataflow with a s
    git clone <repo-url> && cd dataflow
    ```
 
-2. **Start all services:**
+2. **Set up environment variables (optional):**
+
+   Create a `.env` file in the project root to override default configuration:
 
    ```bash
+   # Example .env file
+   POSTGRES_PASSWORD=mysecurepassword
+   LOG_LEVEL=DEBUG
+   ```
+
+   See [Environment Variables Documentation](environment_variables.md) for a complete list of available variables.
+
+3. **Start all services:**
+
+   ```bash
+   # Start all services in the foreground
+   docker-compose up
+
+   # Or start in detached (background) mode
    docker-compose up -d
    ```
 
@@ -30,33 +46,72 @@ Docker Compose allows you to run all the services required for Dataflow with a s
 
    - FastAPI (API server) on port 8000
    - Dagster UI on port 3000
-   - Evidence dashboards on port 9000
+   - Evidence dashboards on port 9002
    - Grafana on port 3001
    - MinIO (object storage) on port 9000 (API) and 9001 (console)
    - PostgreSQL on port 5432
    - Loki, Promtail, and Prometheus for logging and monitoring
 
-3. **Access the services:**
+4. **Access the services:**
 
    - FastAPI docs: http://localhost:8000/docs
    - Dagster UI: http://localhost:3000
    - Evidence dashboards: http://localhost:9002
-   - Grafana: http://localhost:3001
-   - MinIO Console: http://localhost:9001
+   - Grafana: http://localhost:3001 (login with admin/admin)
+   - MinIO Console: http://localhost:9001 (login with minioadmin/minioadmin)
 
-4. **Stop the services:**
+5. **Stop the services:**
 
    ```bash
+   # Stop all services but keep volumes
    docker-compose down
+
+   # Stop services and remove volumes (will delete all data)
+   docker-compose down -v
    ```
 
-5. **View logs for a specific service:**
+6. **View logs for a specific service:**
    ```bash
    docker-compose logs -f <service-name>
    ```
    Replace `<service-name>` with one of: api, dagster, db, minio, evidence, grafana, loki, promtail, prometheus
 
-### Option 2: Using Dev Containers in VS Code
+### Option 2: Using the CLI
+
+DATAFLOW provides a CLI for managing services, workflows, and more.
+
+1. **Set up your Python environment:**
+
+   ```bash
+   # Using uv
+   uv venv
+   source .venv/bin/activate  # On Unix-like systems
+   .venv\Scripts\activate     # On Windows
+   uv pip install -e .
+
+   # Or using hatch
+   hatch shell
+   ```
+
+2. **Start services using the CLI:**
+
+   ```bash
+   # Start all services in the background
+   python -m dataflow.cli service start --all -d
+
+   # Start specific services
+   python -m dataflow.cli service start api dagster
+
+   # Check status of services
+   python -m dataflow.cli service status
+
+   # View logs for a service
+   python -m dataflow.cli service logs dagster
+   ```
+
+See the [CLI Usage Documentation](cli_usage.md) for more details on using the CLI.
+
+### Option 3: Using Dev Containers in VS Code
 
 Dev Containers provide a consistent development environment with all necessary tools and dependencies pre-installed.
 
@@ -193,25 +248,29 @@ docker build --target <stage-name> -t dataflow:<stage-name> .
 - Use `docker-compose logs -f <service-name>` to view logs
 - Add new Python dependencies to pyproject.toml, not directly in Dockerfile
 - Use `uv pip install -e .` for development installations
+- Create a `.env` file for local configuration rather than modifying docker-compose.yml
 
 ## Troubleshooting
 
-### Common Issues
+If you encounter issues while setting up or running DATAFLOW, please refer to our comprehensive [Troubleshooting Guide](troubleshooting.md). The guide covers common issues with:
 
-1. **Port conflicts**
+- Docker Compose services
+- Database connectivity
+- MinIO (object storage)
+- Python environment
+- Dagster workflows
+- Evidence dashboards
+- CLI functionality
+- Logging and monitoring
 
-   - If a service fails to start due to a port conflict, you can change the port mapping in docker-compose.yml
-   - Example: Change `"8000:8000"` to `"8001:8000"` to use port 8001 on your host machine
+## Additional Documentation
 
-2. **Docker volume permissions**
+- [Environment Variables](environment_variables.md) - List of all environment variables and how to configure them
+- [CLI Usage](cli_usage.md) - Detailed guide to using the DATAFLOW CLI
+- [Troubleshooting](troubleshooting.md) - Solutions to common issues
+- [Workflow Authoring](workflows.md) - How to create and manage workflows
 
-   - If you encounter permission issues with Docker volumes, you may need to adjust the permissions or user/group IDs
-
-3. **Python dependency issues**
-   - Use `uv pip install --upgrade -e .` to reinstall dependencies
-   - Check for conflicts in pyproject.toml
-
-### Getting Help
+## Getting Help
 
 For more detailed information on running and developing Dataflow, refer to:
 
@@ -219,4 +278,4 @@ For more detailed information on running and developing Dataflow, refer to:
 - The PRD in the root of the repository
 - The README.md file for quick reference
 
-If you encounter any issues not covered here, please reach out to the team via [contact information].
+If you encounter any issues not covered in the documentation, please reach out to the team via [contact information].
