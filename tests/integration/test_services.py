@@ -18,7 +18,20 @@ pytestmark = pytest.mark.integration
 )
 def test_api_health(docker_services):
     """Test that the API health endpoint is accessible."""
-    response = requests.get("http://localhost:8000/health/")
+    max_retries = 5
+    retry_delay = 2  # seconds
+
+    for attempt in range(max_retries):
+        try:
+            response = requests.get("http://localhost:8000/health/", timeout=5)
+            break
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt < max_retries - 1:
+                import time
+                time.sleep(retry_delay)
+            else:
+                pytest.fail(f"Failed to connect to API after {max_retries} attempts")
+
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
