@@ -1,0 +1,22 @@
+# Nightscout Workflow Configuration
+
+# API connection settings
+base_url: "https://example.nightscout.org" # Replace with your Nightscout URL
+api_secret: "${NIGHTSCOUT_API_SECRET}" # API secret from environment variable
+
+# Data ingestion settings
+entries_count: 500 # Number of recent glucose entries to fetch
+treatments_days: 14 # Days of treatment data to fetch
+profile_enabled: true # Whether to fetch profile data
+
+# Storage settings
+bucket_name: "nightscout-raw" # Minio bucket for raw data
+local_save_path: "data/nightscout/raw" # Optional local path to save data
+
+# Transformation settings
+normalize_timestamps: true # Standardize timestamp formats
+timezone: "UTC" # Timezone for normalized timestamps
+merge_device_status: true # Combine device status with readings
+
+# Scheduling settings
+schedule_interval: "hourly" # How often to run (hourly, daily, weekly)

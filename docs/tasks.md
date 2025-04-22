@@ -163,12 +163,12 @@ This list is exhaustive and strategic, with context and considerations for each 
 
 ## 5. Core Feature Implementation
 
-- [ ] **5.1 Ingestion Framework**
+- [x] **5.1 Ingestion Framework**
 
-  - [ ] Implement shared ingestion utilities (API clients, file readers, etc.) in `src/dataflow/shared/`.
-  - [ ] Implement sample ingestion logic in `ingestion.py` for the example workflow.
-  - [ ] Add error handling, retries, and logging for ingestion.
-  - [ ] Document how to add new data sources.
+  - [x] Implement shared ingestion utilities (API clients, file readers, etc.) in `src/dataflow/shared/`.
+  - [x] Implement sample ingestion logic in `ingestion.py` for the example workflow.
+  - [x] Add error handling, retries, and logging for ingestion.
+  - [x] Document how to add new data sources.
 
 - [ ] **5.2 Transformation Framework**
 
