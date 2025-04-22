@@ -3,6 +3,8 @@
 > **Data Architecture for Transformation, Analytics, File storage, Layered Orchestration, and Warehousing**
 
 [![CI](https://github.com/iamgp/dataflow/actions/workflows/ci.yml/badge.svg)](https://github.com/iamgp/dataflow/actions/workflows/ci.yml)
+[![Integration Tests](https://github.com/iamgp/dataflow/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/iamgp/dataflow/actions/workflows/integration-tests.yml)
+[![codecov](https://codecov.io/gh/iamgp/dataflow/branch/main/graph/badge.svg)](https://codecov.io/gh/iamgp/dataflow)
 [![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](docs/)
 [![License](https://img.shields.io/github/license/iamgp/dataflow)](LICENSE)
 
@@ -103,6 +105,7 @@ Prometheus[Prometheus: Monitoring]
 - **Troubleshooting:** [docs/troubleshooting.md](docs/troubleshooting.md)
 - **Environment Variables:** [docs/environment_variables.md](docs/environment_variables.md)
 - **CLI Usage:** [docs/cli_usage.md](docs/cli_usage.md) or run `python -m dataflow.cli --help`
+- **Testing Guide:** [docs/testing.md](docs/testing.md)
 - **Workflow Authoring:** [docs/workflows.md](docs/workflows.md)
 - **Product Requirements:** [docs/prd.md](docs/prd.md)
 - **Implementation Task List:** [docs/tasks.md](docs/tasks.md)
@@ -154,6 +157,28 @@ python -m dataflow.cli service stop --all
 
 ---
 
+## 🧪 Testing
+
+DATAFLOW has comprehensive test coverage to ensure code quality and reliability:
+
+```bash
+# Run unit tests
+pytest -m "not integration"
+
+# Run integration tests (requires Docker Compose)
+INTEGRATION_TESTS=true pytest tests/integration/
+
+# Run tests with coverage report
+pytest --cov=src/dataflow
+
+# Run specific tests
+pytest tests/shared/test_logging.py
+```
+
+See the [Testing Guide](docs/testing.md) for more details on writing and running tests.
+
+---
+
 ## 🤖 AI-Assisted Development
 
 We use AI tools (Cursor, GPT, Claude, Copilot, etc.) to accelerate development.
@@ -167,6 +192,7 @@ See `docs/prd.md` and `docs/tasks.md` for project requirements and implementatio
 - [Troubleshooting Guide](docs/troubleshooting.md)
 - [Environment Variables](docs/environment_variables.md)
 - [CLI Usage](docs/cli_usage.md)
+- [Testing Guide](docs/testing.md)
 - [Workflow Authoring](docs/workflows.md)
 - [Product Requirements](docs/prd.md)
 - [Implementation Task List](docs/tasks.md)

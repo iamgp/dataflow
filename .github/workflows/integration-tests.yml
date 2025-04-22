@@ -1,0 +1,65 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+  # Allow manual triggers
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.14"
+          enable-cache: true
+          python-version: "3.11"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Set up Docker Compose
+        run: |
+          docker-compose pull
+          docker-compose build
+          docker-compose up -d
+
+      - name: Wait for services to start
+        run: |
+          # Simple sleep to allow services to initialize
+          sleep 10
+
+          # Verify services are running
+          docker-compose ps
+
+      - name: Run integration tests
+        run: uv run pytest tests/integration -v
+        env:
+          CI: true
+          INTEGRATION_TESTS: true
+          START_DOCKER_SERVICES: "false"  # Services are already started
+
+      - name: Dump docker logs on failure
+        if: failure()
+        run: |
+          docker-compose logs
+
+      - name: Clean up
+        run: docker-compose down
+        if: always()  # Always run cleanup, even if tests fail

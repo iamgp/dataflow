@@ -49,7 +49,7 @@ def ensure_bucket_exists(client: Minio, bucket_name: str) -> None:
         raise
 
 
-def upload_file(
+def upload_file_with_client(
     client: Minio,
     bucket_name: str,
     object_name: str,
@@ -109,6 +109,23 @@ def upload_file(
             error=str(e),
         )
         raise
+
+
+def upload_file(bucket_name: str, object_name: str, file_path: str) -> None:
+    """Uploads a file to a Minio bucket.
+
+    Args:
+        bucket_name: Name of the bucket to upload to
+        object_name: Name to give the object in the bucket
+        file_path: Local path to the file to upload
+
+    Raises:
+        S3Error: If there's an error during S3 operations
+    """
+    client = get_minio_client()
+    upload_file_with_client(
+        client=client, bucket_name=bucket_name, object_name=object_name, file_path=file_path
+    )
 
 
 def download_file(client: Minio, bucket_name: str, object_name: str, file_path: str) -> None:
@@ -183,3 +200,52 @@ def list_objects(client: Minio, bucket_name: str, prefix: str | None = None) -> 
             error=str(e),
         )
         raise  # Raising the exception is better for error handling than returning an empty list
+
+
+def check_bucket_exists(bucket_name: str) -> bool:
+    """Checks if a bucket exists in Minio.
+
+    Args:
+        bucket_name: Name of the bucket to check
+
+    Returns:
+        True if the bucket exists, False otherwise
+
+    Raises:
+        S3Error: If there's an error during S3 operations
+    """
+    if not bucket_name:
+        raise ValueError("bucket_name must not be empty")
+
+    try:
+        client = get_minio_client()
+        exists = client.bucket_exists(bucket_name)
+        log.debug("Bucket existence checked", bucket_name=bucket_name, exists=exists)
+        return exists
+    except S3Error as e:
+        log.error("Error checking bucket existence", bucket_name=bucket_name, error=str(e))
+        raise
+
+
+def create_bucket(bucket_name: str) -> None:
+    """Creates a bucket in Minio if it doesn't already exist.
+
+    Args:
+        bucket_name: Name of the bucket to create
+
+    Raises:
+        S3Error: If there's an error during S3 operations
+    """
+    if not bucket_name:
+        raise ValueError("bucket_name must not be empty")
+
+    try:
+        client = get_minio_client()
+        if not client.bucket_exists(bucket_name):
+            client.make_bucket(bucket_name)
+            log.info("Bucket created", bucket_name=bucket_name)
+        else:
+            log.debug("Bucket already exists", bucket_name=bucket_name)
+    except S3Error as e:
+        log.error("Error creating bucket", bucket_name=bucket_name, error=str(e))
+        raise
