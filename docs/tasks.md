@@ -108,19 +108,19 @@ This list is exhaustive and strategic, with context and considerations for each 
   - [ ] Add troubleshooting and FAQ section to docs.
   - [ ] Provide sample `.env` files and document required environment variables.
 
-- [ ] **3.2 Testing & CI/CD**
+- [x] **3.2 Testing & CI/CD**
 
-  - [ ] Set up `pytest` and add sample tests for each module (unit, integration, e2e).
-  - [ ] Configure GitHub Actions workflows:
-    - [ ] Linting (`ruff`)
-    - [ ] Type checking (`basedpyright`)
-    - [ ] Testing (`pytest`)
-    - [ ] Docs build (`mkdocs`)
-    - [ ] (Optional) Docker build and deployment
-    - [ ] (Optional) Integration tests with Docker Compose services
-  - [ ] Add test coverage reporting (e.g., `pytest-cov`, Codecov).
-  - [ ] Add badge(s) to `README.md` for build status, coverage.
-  - [ ] Document how to run tests locally and in CI.
+  - [x] Set up `pytest` and add sample tests for each module (unit, integration, e2e).
+  - [x] Configure GitHub Actions workflows:
+    - [x] Linting (`ruff`)
+    - [x] Type checking (`basedpyright`)
+    - [x] Testing (`pytest`)
+    - [x] Docs build (`mkdocs`)
+    - [x] (Optional) Docker build and deployment
+    - [x] (Optional) Integration tests with Docker Compose services
+  - [x] Add test coverage reporting (e.g., `pytest-cov`, Codecov).
+  - [x] Add badge(s) to `README.md` for build status, coverage.
+  - [x] Document how to run tests locally and in CI.
 
 - [ ] **3.3 Documentation**
   - [ ] Set up MkDocs with navigation, architecture diagrams, and workflow authoring guide.
