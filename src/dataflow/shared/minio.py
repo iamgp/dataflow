@@ -1,6 +1,8 @@
+import io
 import os
 from typing import BinaryIO
 
+import pandas as pd
 from minio import Minio
 from minio.error import S3Error
 
@@ -249,3 +251,49 @@ def create_bucket(bucket_name: str) -> None:
     except S3Error as e:
         log.error("Error creating bucket", bucket_name=bucket_name, error=str(e))
         raise
+
+
+def upload_dataframe(
+    df: pd.DataFrame,
+    bucket_name: str,
+    object_name: str,
+    content_type: str = "text/csv",
+    index: bool = False,
+) -> None:
+    """Uploads a pandas DataFrame to a Minio bucket.
+
+    Args:
+        df: Pandas DataFrame to upload
+        bucket_name: Name of the bucket to upload to
+        object_name: Name to give the object in the bucket
+        content_type: MIME type of the file (default: 'text/csv')
+        index: Whether to include index in the CSV output (default: False)
+
+    Raises:
+        S3Error: If there's an error during S3 operations
+    """
+    # Create a buffer for the CSV content
+    buffer = io.StringIO()
+    df.to_csv(buffer, index=index)
+
+    # Convert to bytes for upload
+    bytes_content = buffer.getvalue().encode("utf-8")
+    bytes_stream = io.BytesIO(bytes_content)
+
+    # Upload to Minio
+    client = get_minio_client()
+    upload_file_with_client(
+        client=client,
+        bucket_name=bucket_name,
+        object_name=object_name,
+        file_stream=bytes_stream,
+        content_type=content_type,
+    )
+
+    log.info(
+        "DataFrame successfully uploaded",
+        bucket_name=bucket_name,
+        object_name=object_name,
+        rows=len(df),
+        columns=len(df.columns),
+    )

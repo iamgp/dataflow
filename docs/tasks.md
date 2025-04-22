@@ -177,13 +177,13 @@ This list is exhaustive and strategic, with context and considerations for each 
   - [x] Add error handling, validation, and logging for transformation.
   - [x] Document how to add new transformation steps.
 
-- [ ] **5.3 Asset & Job Definition**
+- [x] **5.3 Asset & Job Definition**
 
-  - [ ] Implement Dagster assets/resources in `assets.py` (if needed).
-  - [ ] Implement Dagster job/op in `dagster_job.py` that wires together ingestion, transformation, and assets.
-  - [ ] Register job with the workflow registry.
-  - [ ] Add job configuration and parameterization (e.g., via config.yaml or Dagster config).
-  - [ ] Document how to define and register new jobs.
+  - [x] Implement Dagster assets/resources in `assets.py` (if needed).
+  - [x] Implement Dagster job/op in `dagster_job.py` that wires together ingestion, transformation, and assets.
+  - [x] Register job with the workflow registry.
+  - [x] Add job configuration and parameterization (e.g., via config.yaml or Dagster config).
+  - [x] Document how to define and register new jobs.
 
 - [ ] **5.4 DBT & Evidence Integration**
 
