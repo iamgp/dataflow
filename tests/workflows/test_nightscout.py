@@ -1,6 +1,7 @@
 """Unit tests for the Nightscout workflow components."""
 
 from datetime import UTC, datetime
+from typing import cast
 from unittest.mock import patch
 
 import pandas as pd
@@ -159,9 +160,11 @@ class TestNightscoutAssets:
             mock_minio.return_value.list_objects.return_value = []
 
             transformed_data = {"bucket": "test-transformed", "files": [], "count": 0}
-            daily_stats, weekly_stats, monthly_stats = nightscout_statistics(
-                context, transformed_data, mock_assets_config
+            result = cast(
+                tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
+                nightscout_statistics(context, transformed_data, mock_assets_config),
             )
+            daily_stats, weekly_stats, monthly_stats = result
 
             # Verify each DataFrame in the tuple
             assert isinstance(daily_stats, pd.DataFrame)
