@@ -163,34 +163,34 @@ This list is exhaustive and strategic, with context and considerations for each 
 
 ## 5. Core Feature Implementation
 
-- [ ] **5.1 Ingestion Framework**
+- [x] **5.1 Ingestion Framework**
 
-  - [ ] Implement shared ingestion utilities (API clients, file readers, etc.) in `src/dataflow/shared/`.
-  - [ ] Implement sample ingestion logic in `ingestion.py` for the example workflow.
-  - [ ] Add error handling, retries, and logging for ingestion.
-  - [ ] Document how to add new data sources.
+  - [x] Implement shared ingestion utilities (API clients, file readers, etc.) in `src/dataflow/shared/`.
+  - [x] Implement sample ingestion logic in `ingestion.py` for the example workflow.
+  - [x] Add error handling, retries, and logging for ingestion.
+  - [x] Document how to add new data sources.
 
-- [ ] **5.2 Transformation Framework**
+- [x] **5.2 Transformation Framework**
 
-  - [ ] Implement shared transformation utilities (data cleaning, mapping, enrichment) in `src/dataflow/shared/`.
-  - [ ] Implement sample transformation logic in `transform.py` for the example workflow.
-  - [ ] Add error handling, validation, and logging for transformation.
-  - [ ] Document how to add new transformation steps.
+  - [x] Implement shared transformation utilities (data cleaning, mapping, enrichment) in `src/dataflow/shared/`.
+  - [x] Implement sample transformation logic in `transform.py` for the example workflow.
+  - [x] Add error handling, validation, and logging for transformation.
+  - [x] Document how to add new transformation steps.
 
-- [ ] **5.3 Asset & Job Definition**
+- [x] **5.3 Asset & Job Definition**
 
-  - [ ] Implement Dagster assets/resources in `assets.py` (if needed).
-  - [ ] Implement Dagster job/op in `dagster_job.py` that wires together ingestion, transformation, and assets.
-  - [ ] Register job with the workflow registry.
-  - [ ] Add job configuration and parameterization (e.g., via config.yaml or Dagster config).
-  - [ ] Document how to define and register new jobs.
+  - [x] Implement Dagster assets/resources in `assets.py` (if needed).
+  - [x] Implement Dagster job/op in `dagster_job.py` that wires together ingestion, transformation, and assets.
+  - [x] Register job with the workflow registry.
+  - [x] Add job configuration and parameterization (e.g., via config.yaml or Dagster config).
+  - [x] Document how to define and register new jobs.
 
-- [ ] **5.4 DBT & Evidence Integration**
+- [x] **5.4 DBT & Evidence Integration**
 
-  - [ ] Add DBT models for the example workflow in `dbt/`.
-  - [ ] Add Evidence dashboards for the example workflow in `evidence/`.
-  - [ ] Document how to add new DBT/Evidence assets per workflow.
-  - [ ] Add CLI/API commands to build and validate DBT/Evidence assets.
+  - [x] Add DBT models for the example workflow in `dbt/`.
+  - [x] Add Evidence dashboards for the example workflow in `evidence/`.
+  - [x] Document how to add new DBT/Evidence assets per workflow.
+  - [x] Add CLI/API commands to build and validate DBT/Evidence assets.
 
 - [ ] **5.5 Testing**
   - [ ] Add unit tests for each workflow component (ingestion, transform, assets).

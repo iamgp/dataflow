@@ -2,9 +2,15 @@ import importlib
 import os
 import pkgutil
 
-from dagster import Definitions, JobDefinition, repository
+from dagster import AssetsDefinition, Definitions, JobDefinition, repository
 
+from dataflow.shared.dagster_io import minio_io_manager
 from dataflow.shared.logging import get_logger
+from dataflow.workflows.nightscout.assets import (
+    nightscout_raw_data,
+    nightscout_statistics,
+    nightscout_transformed_data,
+)
 
 # Import the registry - ensuring workflows are registered when this module is loaded
 # We need to dynamically discover and import modules within the 'workflows' package
@@ -51,6 +57,25 @@ else:
 # --- End Dynamic Loading ---
 
 
+# Collect assets from all workflows
+def collect_assets() -> list[AssetsDefinition]:
+    """Collect assets from all workflows."""
+    # Currently manually adding assets, but could be dynamic in the future
+    return [
+        nightscout_raw_data,
+        nightscout_transformed_data,
+        nightscout_statistics,
+    ]
+
+
+# Define common resources for all jobs and assets
+def get_resource_defs():
+    """Get resource definitions for the repository."""
+    return {
+        "minio_io_manager": minio_io_manager,
+    }
+
+
 # Define the Dagster repository
 @repository
 def dataflow_repo():
@@ -58,16 +83,19 @@ def dataflow_repo():
     # Discover workflows that were registered and ensure they're JobDefinitions
     discovered_jobs: list[JobDefinition] = discover_workflows()
 
+    # Collect assets from all workflows
+    workflow_assets = collect_assets()
+
     # The @repository decorator expects a list/dict of definitions
-    # TODO: Add resources, schedules, sensors as needed
-    return discovered_jobs  # Return the list of discovered jobs directly
+    return discovered_jobs + workflow_assets
 
 
 # Keep the Definitions object for potential non-repo deployment contexts
 # or for loading assets/resources/schedules/sensors centrally
 definitions = Definitions(
-    jobs=discover_workflows(),  # This should now properly type check
-    # resources={},
+    jobs=discover_workflows(),
+    assets=collect_assets(),
+    resources=get_resource_defs(),
     # schedules={},
     # sensors={},
 )
