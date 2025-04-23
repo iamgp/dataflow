@@ -6,6 +6,7 @@ including API clients, file readers, and base classes for creating ingestion pip
 
 import asyncio
 import csv
+import io
 import json
 import os
 import time
@@ -15,7 +16,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import (
     Any,
-    BinaryIO,
     Generic,
     Protocol,
     TextIO,
@@ -29,7 +29,7 @@ import requests
 from pydantic import BaseModel
 
 from dataflow.shared.logging import get_logger
-from dataflow.shared.minio import get_minio_client, upload_file_with_client
+from dataflow.shared.minio import get_minio_client
 
 log = get_logger("dataflow.shared.ingestion")
 
@@ -240,7 +240,19 @@ class BaseAPIClient:
 
         Raises:
             DataIngestionError: If response handling fails
+            RateLimitError: If rate limit is exceeded
+            AuthenticationError: If authentication fails
+            ResourceNotFoundError: If resource is not found
         """
+        if response.status_code == 429:
+            raise RateLimitError("Rate limit exceeded")
+
+        if response.status_code == 401:
+            raise AuthenticationError("Authentication failed")
+
+        if response.status_code == 404:
+            raise ResourceNotFoundError("Resource not found")
+
         if response.status_code == 204:
             return None
 
@@ -455,58 +467,52 @@ def save_to_minio(
     object_name: str | None = None,
     content_type: str | None = None,
 ) -> str:
-    """Save data to Minio.
+    """Save data to MinIO.
 
     Args:
-        bucket_name: Minio bucket name
-        data: Data to save (string, bytes, or file-like object)
-        object_name: Object name in Minio, defaults to ISO timestamp if None
-        content_type: MIME type of the content
+        bucket_name: Name of the MinIO bucket
+        data: Data to save (can be dict, list, or other JSON-serializable object)
+        object_name: Name of the object in MinIO (default: auto-generated)
+        content_type: Content type of the data (default: application/json)
 
     Returns:
-        Object name used for storage
+        Object name in MinIO
 
     Raises:
-        DataIngestionError: If saving to Minio fails
+        DataIngestionError: If saving to MinIO fails
     """
-    if object_name is None:
-        timestamp = datetime.now().isoformat().replace(":", "-").replace(".", "-")
-        object_name = f"data_{timestamp}.json"
-
     try:
+        # Generate object name if not provided
+        if object_name is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            object_name = f"data_{timestamp}.json"
+
+        # Default content type
+        if content_type is None:
+            content_type = "application/json"
+
+        # Convert data to JSON string
+        json_str = json.dumps(data)
+        json_bytes = json_str.encode("utf-8")
+
+        # Create file-like object
+        file_stream = io.BytesIO(json_bytes)
+
+        # Get MinIO client
         client = get_minio_client()
 
-        if isinstance(data, str | bytes):
-            # For string or bytes data, create a file-like object
-            if isinstance(data, str):
-                data = data.encode("utf-8")
-
-            import io
-
-            file_stream = io.BytesIO(data)
-            ct = content_type or "application/octet-stream"
-            upload_file_with_client(
-                client=client,
-                bucket_name=bucket_name,
-                object_name=object_name,
-                file_stream=cast(BinaryIO, file_stream),
-                content_type=ct,
-            )
-        else:
-            # Assume it's a file path
-            upload_file_with_client(
-                client=client,
-                bucket_name=bucket_name,
-                object_name=object_name,
-                file_path=str(data),
-                content_type=content_type or "application/octet-stream",
-            )
+        # Upload to MinIO
+        client.put_object(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            data=file_stream,
+            length=len(json_bytes),
+            content_type=content_type,
+        )
 
         return object_name
-
     except Exception as e:
-        log.error("Failed to save data to Minio", bucket=bucket_name, error=str(e))
-        raise DataIngestionError(f"Failed to save data to Minio: {e}") from e
+        raise DataIngestionError(f"Failed to save data to MinIO: {e}") from e
 
 
 def save_to_local_file(

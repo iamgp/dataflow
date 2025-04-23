@@ -22,7 +22,7 @@ from dagster import (
 )
 
 from dataflow.shared.logging import get_logger
-from dataflow.shared.minio import get_minio_client, upload_dataframe, upload_file_with_client
+from dataflow.shared.minio import get_minio_client, upload_file_with_client
 
 log = get_logger("dataflow.shared.dagster_io")
 
@@ -82,10 +82,24 @@ class MinioIOManager(ConfigurableIOManager):
             key: The object key
         """
         log.info(f"Storing DataFrame in MinIO: {bucket}/{key}")
-        upload_dataframe(
-            df=df,
+
+        # Convert DataFrame to CSV string
+        import io
+
+        csv_buffer = io.StringIO()
+        df.to_csv(csv_buffer, index=False)
+        csv_bytes = csv_buffer.getvalue().encode("utf-8")
+
+        # Create BytesIO object for MinIO upload
+        file_stream = io.BytesIO(csv_bytes)
+
+        # Upload using MinIO client
+        client = get_minio_client()
+        client.put_object(
             bucket_name=bucket,
             object_name=key,
+            data=file_stream,
+            length=len(csv_bytes),
             content_type="text/csv",
         )
 
@@ -149,39 +163,37 @@ class MinioIOManager(ConfigurableIOManager):
         # Ensure bucket exists
         client = get_minio_client()
         if not client.bucket_exists(bucket_name):
+            log.info(f"Creating MinIO bucket: {bucket_name}")
             client.make_bucket(bucket_name)
-            log.info(f"Created MinIO bucket: {bucket_name}")
 
         # Handle different data types
+        metadata = {}
         if isinstance(obj, pd.DataFrame):
             self._handle_df(obj, bucket_name, object_key)
             # Add metadata about the DataFrame
-            context.add_output_metadata(
-                {
-                    "rows": MetadataValue.int(len(obj)),
-                    "columns": MetadataValue.json(list(obj.columns)),
-                    "preview": MetadataValue.md(obj.head().to_markdown() or ""),
-                    "minio_path": MetadataValue.path(f"minio://{bucket_name}/{object_key}"),
-                }
-            )
+            metadata = {
+                "rows": MetadataValue.int(len(obj)),
+                "columns": MetadataValue.json(list(obj.columns)),
+                "preview": MetadataValue.md(obj.head().to_markdown() or ""),
+                "minio_path": MetadataValue.path(f"minio://{bucket_name}/{object_key}"),
+            }
         elif isinstance(obj, dict):
             self._handle_dict(obj, bucket_name, object_key)
             # Add metadata about the dictionary
-            context.add_output_metadata(
-                {
-                    "keys": MetadataValue.json(list(obj.keys())),
-                    "minio_path": MetadataValue.path(f"minio://{bucket_name}/{object_key}"),
-                }
-            )
+            metadata = {
+                "keys": MetadataValue.json(list(obj.keys())),
+                "minio_path": MetadataValue.path(f"minio://{bucket_name}/{object_key}"),
+            }
         else:
             self._handle_object(obj, bucket_name, object_key)
             # Add basic metadata
-            context.add_output_metadata(
-                {
-                    "type": MetadataValue.text(type(obj).__name__),
-                    "minio_path": MetadataValue.path(f"minio://{bucket_name}/{object_key}"),
-                }
-            )
+            metadata = {
+                "type": MetadataValue.text(type(obj).__name__),
+                "minio_path": MetadataValue.path(f"minio://{bucket_name}/{object_key}"),
+            }
+
+        # Add metadata to context
+        context.add_output_metadata(metadata)
 
     def load_input(self, context: InputContext) -> Any:
         """Load an object from MinIO.

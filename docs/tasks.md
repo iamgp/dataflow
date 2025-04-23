@@ -185,12 +185,12 @@ This list is exhaustive and strategic, with context and considerations for each 
   - [x] Add job configuration and parameterization (e.g., via config.yaml or Dagster config).
   - [x] Document how to define and register new jobs.
 
-- [ ] **5.4 DBT & Evidence Integration**
+- [x] **5.4 DBT & Evidence Integration**
 
-  - [ ] Add DBT models for the example workflow in `dbt/`.
-  - [ ] Add Evidence dashboards for the example workflow in `evidence/`.
-  - [ ] Document how to add new DBT/Evidence assets per workflow.
-  - [ ] Add CLI/API commands to build and validate DBT/Evidence assets.
+  - [x] Add DBT models for the example workflow in `dbt/`.
+  - [x] Add Evidence dashboards for the example workflow in `evidence/`.
+  - [x] Document how to add new DBT/Evidence assets per workflow.
+  - [x] Add CLI/API commands to build and validate DBT/Evidence assets.
 
 - [ ] **5.5 Testing**
   - [ ] Add unit tests for each workflow component (ingestion, transform, assets).

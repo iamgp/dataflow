@@ -447,8 +447,16 @@ class DateTimeNormalizer(DataFrameTransformer):
                         result[col], errors="coerce" if self.errors == "coerce" else "raise"
                     )
 
-                # Convert timezone if specified
-                if self.target_timezone:
+                # Check if timestamps are already timezone-aware
+                if result[col].dt.tz is None:
+                    # Only localize if not already timezone-aware
+                    result[col] = result[col].dt.tz_localize("UTC")
+                elif str(result[col].dt.tz) != "UTC":
+                    # Convert to UTC if in a different timezone
+                    result[col] = result[col].dt.tz_convert("UTC")
+
+                # Convert to target timezone if specified
+                if self.target_timezone and self.target_timezone != "UTC":
                     result[col] = result[col].dt.tz_convert(self.target_timezone)
 
                 # Format as string if specified
