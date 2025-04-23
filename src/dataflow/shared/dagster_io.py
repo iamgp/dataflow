@@ -160,7 +160,7 @@ class MinioIOManager(ConfigurableIOManager):
                 {
                     "rows": MetadataValue.int(len(obj)),
                     "columns": MetadataValue.json(list(obj.columns)),
-                    "preview": MetadataValue.md(obj.head().to_markdown()),
+                    "preview": MetadataValue.md(obj.head().to_markdown() or ""),
                     "minio_path": MetadataValue.path(f"minio://{bucket_name}/{object_key}"),
                 }
             )

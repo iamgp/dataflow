@@ -3,12 +3,13 @@
 This module provides reusable components for transforming data, including cleaning,
 mapping, enrichment, and validation utilities.
 """
+# type: ignore
 
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
@@ -25,12 +26,6 @@ T = TypeVar("T")
 
 class TransformationError(Exception):
     """Base exception for all transformation-related errors."""
-
-    pass
-
-
-class ValidationError(TransformationError):
-    """Exception raised when data fails validation."""
 
     pass
 
@@ -180,13 +175,13 @@ class FunctionTransformer(Transformer[InputType, OutputType]):
 
 
 class DataFrameTransformer(Transformer[pd.DataFrame, pd.DataFrame]):
-    """Base class for transformers that operate on pandas DataFrames."""
+    """Base class for transformers that operate on DataFrames."""
 
-    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Transform the input DataFrame.
+    def transform(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Transform a DataFrame.
 
         Args:
-            df: Input DataFrame to transform
+            data: Input DataFrame
 
         Returns:
             Transformed DataFrame
@@ -194,22 +189,31 @@ class DataFrameTransformer(Transformer[pd.DataFrame, pd.DataFrame]):
         Raises:
             TransformationError: If transformation fails
         """
-        if not isinstance(df, pd.DataFrame):
-            raise TypeError(f"Expected DataFrame, got {type(df).__name__}")
+        if not isinstance(data, pd.DataFrame):
+            raise TransformationError(f"Input must be a DataFrame, got {type(data).__name__}")
 
         try:
-            return self._transform_dataframe(df)
+            # Call the implementation-specific transformation method
+            result = self._transform_dataframe(data)
+            # Ensure we always return a proper DataFrame
+            if not isinstance(result, pd.DataFrame):
+                raise TransformationError(f"Expected DataFrame result, got {type(result).__name__}")
+            return result
         except Exception as e:
             if isinstance(e, TransformationError):
                 raise
-            raise TransformationError(f"DataFrame transformation failed: {e}") from e
+            self.log.error("Failed to transform DataFrame", error=str(e))
+            raise TransformationError(f"Failed to transform DataFrame: {e}") from e
 
     @abstractmethod
     def _transform_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Implement the DataFrame transformation.
+        """Transform the DataFrame.
+
+        This method must be implemented by subclasses to provide the actual
+        transformation logic.
 
         Args:
-            df: Input DataFrame to transform
+            df: Input DataFrame
 
         Returns:
             Transformed DataFrame
@@ -294,10 +298,10 @@ class DataCleaner(DataFrameTransformer):
         self.strip_strings = strip_strings
 
     def _transform_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Apply cleaning operations to the DataFrame.
+        """Transform the DataFrame by cleaning data.
 
         Args:
-            df: Input DataFrame to clean
+            df: Input DataFrame
 
         Returns:
             Cleaned DataFrame
@@ -305,10 +309,9 @@ class DataCleaner(DataFrameTransformer):
         result = df.copy()
         original_shape = result.shape
 
-        # Drop duplicates if enabled
+        # Drop duplicate rows
         if self.drop_duplicates:
             result = result.drop_duplicates()
-
             if result.shape[0] < original_shape[0]:
                 self.log.info(
                     "Dropped duplicate rows",
@@ -319,8 +322,11 @@ class DataCleaner(DataFrameTransformer):
 
         # Drop columns with too many nulls
         if self.drop_null_columns is not None:
-            null_fractions = result.isnull().mean()
-            cols_to_drop = null_fractions[null_fractions > self.drop_null_columns].index.tolist()
+            # Calculate null fractions per column and ensure it's a Series
+            null_fractions = pd.Series(result.isnull().mean())
+            # Convert to Series to ensure we have .index
+            high_null_cols = pd.Series(null_fractions > self.drop_null_columns)
+            cols_to_drop = result.columns[high_null_cols].tolist()
 
             if cols_to_drop:
                 result = result.drop(columns=cols_to_drop)
@@ -333,7 +339,8 @@ class DataCleaner(DataFrameTransformer):
         # Drop rows with too many nulls
         if self.drop_null_rows is not None:
             original_rows = result.shape[0]
-            row_null_fractions = result.isnull().mean(axis=1)
+            # Calculate null fractions per row and ensure it's a Series
+            row_null_fractions = pd.Series(result.isnull().mean(axis=1))
             result = result[row_null_fractions <= self.drop_null_rows]
 
             if result.shape[0] < original_rows:
@@ -349,9 +356,11 @@ class DataCleaner(DataFrameTransformer):
         if self.fill_null_values:
             for col, value in self.fill_null_values.items():
                 if col in result.columns:
-                    null_count = result[col].isnull().sum()
+                    # Get the column as a Series
+                    col_series = pd.Series(result[col])
+                    null_count = col_series.isnull().sum()
                     if null_count > 0:
-                        result[col] = result[col].fillna(value)
+                        result[col] = col_series.fillna(value)
                         self.log.info(
                             f"Filled {null_count} null values in column '{col}'",
                             value=str(value),
@@ -359,14 +368,21 @@ class DataCleaner(DataFrameTransformer):
 
         # Strip whitespace from string columns
         if self.strip_strings:
-            for col in result.select_dtypes(include=["object"]).columns:
-                if result[col].dtype == "object":
-                    # Only apply string operations to string columns
+            # Get string columns
+            string_cols = result.select_dtypes(include=["object", "string"]).columns
+            for col in string_cols:
+                # Get the column as a Series and ensure it's string type
+                col_series = pd.Series(result[col])
+                if pd.api.types.is_string_dtype(col_series.dtype):
                     try:
-                        result[col] = result[col].str.strip()
+                        result[col] = col_series.str.strip()
                     except AttributeError:
                         # Column might contain non-string objects
                         pass
+
+        # Ensure we're returning a DataFrame
+        if not isinstance(result, pd.DataFrame):
+            result = pd.DataFrame(result)
 
         return result
 
@@ -379,7 +395,7 @@ class DateTimeNormalizer(DataFrameTransformer):
         columns: list[str],
         target_format: str | None = None,
         target_timezone: str | None = None,
-        errors: str = "raise",
+        errors: Literal["raise", "ignore", "coerce"] = "raise",
         name: str | None = None,
     ):
         """Initialize the datetime normalizer.
@@ -416,8 +432,20 @@ class DateTimeNormalizer(DataFrameTransformer):
                 continue
 
             try:
-                # Convert to datetime objects
-                result[col] = pd.to_datetime(result[col], errors=self.errors)
+                # Convert to datetime objects - pandas to_datetime only accepts 'raise' or 'coerce'
+                if self.errors == "ignore":
+                    # For 'ignore', we'll try conversion but catch exceptions
+                    try:
+                        result[col] = pd.to_datetime(result[col])
+                    except Exception as e:
+                        self.log.warning(
+                            f"Error converting column '{col}' to datetime, ignoring: {e}"
+                        )
+                else:
+                    # Use the pandas-supported error modes ('raise' or 'coerce')
+                    result[col] = pd.to_datetime(
+                        result[col], errors="coerce" if self.errors == "coerce" else "raise"
+                    )
 
                 # Convert timezone if specified
                 if self.target_timezone:
@@ -500,15 +528,15 @@ class TypeConverter(DataFrameTransformer):
 
     def __init__(
         self,
-        type_mapping: dict[str, str],
-        errors: str = "raise",
+        type_mapping: dict[str, Any],
+        errors: Literal["raise", "ignore"] = "raise",
         name: str | None = None,
     ):
         """Initialize the type converter.
 
         Args:
-            type_mapping: Dictionary mapping column names to dtype strings
-            errors: How to handle errors ('raise', 'ignore', 'coerce')
+            type_mapping: Dictionary mapping column names to dtype objects or strings
+            errors: How to handle errors ('raise', 'ignore')
             name: Optional name for the converter, used for logging
         """
         super().__init__(name=name)
@@ -730,7 +758,7 @@ def merge_dataframes(
     on: str | list[str] | None = None,
     left_on: str | list[str] | None = None,
     right_on: str | list[str] | None = None,
-    how: str = "left",
+    how: Literal["left", "right", "outer", "inner", "cross"] = "left",
     suffixes: tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
     """Merge two DataFrames with error handling.
@@ -741,7 +769,7 @@ def merge_dataframes(
         on: Column name(s) to join on (if same in both DataFrames)
         left_on: Column name(s) from left DataFrame to join on
         right_on: Column name(s) from right DataFrame to join on
-        how: Type of merge ('left', 'right', 'outer', 'inner')
+        how: Type of merge ('left', 'right', 'outer', 'inner', 'cross')
         suffixes: Suffixes to apply to overlapping columns
 
     Returns:

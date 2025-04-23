@@ -4,7 +4,7 @@ This module handles the transformation of raw Nightscout data into a normalized 
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -74,8 +74,8 @@ class NightscoutEntriesToDataFrame(DataFrameTransformer):
         else:
             raise TransformationError("No date column found in entries data")
 
-        # Select and rename relevant columns
-        columns = {
+        # Define column mapping
+        columns: dict[str, str] = {
             "sgv": "glucose",
             "direction": "trend",
             "device": "device",
@@ -84,12 +84,13 @@ class NightscoutEntriesToDataFrame(DataFrameTransformer):
         }
 
         # Only keep columns that exist in the DataFrame
-        columns = {k: v for k, v in columns.items() if k in df.columns}
+        valid_columns: dict[str, str] = {k: v for k, v in columns.items() if k in df.columns}
 
         # Select columns and rename
-        df = df[list(columns.keys())].rename(columns=columns)
+        result = df[list(valid_columns.keys())]
+        result.columns = pd.Index([valid_columns[col] for col in result.columns])
 
-        return df
+        return cast(pd.DataFrame, result)
 
 
 class NightscoutTreatmentsToDataFrame(DataFrameTransformer):
@@ -113,7 +114,8 @@ class NightscoutTreatmentsToDataFrame(DataFrameTransformer):
             raise TransformationError("No timestamp column found in treatments data")
 
         # Rename columns to snake_case
-        df.columns = [camel_to_snake(col) for col in df.columns]
+        renamed_columns = {col: camel_to_snake(col) for col in df.columns}
+        df = df.rename(columns=renamed_columns)
 
         # Ensure required columns exist
         required_cols = ["timestamp", "event_type"]
@@ -161,13 +163,14 @@ class NightscoutDeviceStatusToDataFrame(DataFrameTransformer):
             )
 
         # Rename columns to snake_case
-        df.columns = [camel_to_snake(col) for col in df.columns]
+        renamed_columns = {col: camel_to_snake(col) for col in df.columns}
+        df = df.rename(columns=renamed_columns)
 
         # Select relevant columns
         relevant_cols = ["timestamp", "device", "uploader_battery", "battery"]
         existing_cols = [col for col in relevant_cols if col in df.columns]
 
-        return df[existing_cols]
+        return cast(pd.DataFrame, df[existing_cols])
 
 
 class GlucoseDataCleaner(DataCleaner):
@@ -227,7 +230,7 @@ class GlucoseDataCleaner(DataCleaner):
                     max_glucose=self.max_glucose,
                 )
 
-        return result
+        return cast(pd.DataFrame, result)
 
 
 class NightscoutTransformer:
@@ -430,23 +433,30 @@ class NightscoutTransformer:
 
             # Use pd.merge_asof for time-based merging
             try:
-                # Sort both DataFrames by timestamp
-                merged_df = merged_df.sort_values("timestamp")
-                ds_df = ds_df.sort_values("timestamp")
+                # Sort both DataFrames by timestamp and clean out NaT values
+                merged_df = merged_df.dropna(subset=["timestamp"]).sort_values("timestamp")
+                ds_df = ds_df.dropna(subset=["timestamp"]).sort_values("timestamp")
 
-                # Merge with device status using nearest timestamp
-                merged_df = pd.merge_asof(
-                    merged_df,
-                    ds_df,
-                    on="timestamp",
-                    direction="nearest",
-                    tolerance=pd.Timedelta("30min"),
-                    suffixes=("", "_device"),
-                )
+                # Skip merge if we have no data after cleanup
+                if len(merged_df.index) == 0 or len(ds_df.index) == 0:
+                    self.log.warning("Skipping merge due to empty dataframes after NaT removal")
+                else:
+                    # Create a fixed tolerance value that's guaranteed to be a Timedelta
+                    tolerance_val = cast(pd.Timedelta, pd.Timedelta(minutes=30))
 
-                # Add the merged data to the result
-                result["merged"] = merged_df
-                self.log.info("Successfully merged device status with glucose entries")
+                    # Merge with device status using nearest timestamp
+                    merged_df = pd.merge_asof(
+                        merged_df,
+                        ds_df,
+                        on="timestamp",
+                        direction="nearest",
+                        tolerance=tolerance_val,
+                        suffixes=("", "_device"),
+                    )
+
+                    # Add the merged data to the result
+                    result["merged"] = merged_df
+                    self.log.info("Successfully merged device status with glucose entries")
             except Exception as e:
                 self.log.error("Failed to merge device status with glucose entries", error=str(e))
 

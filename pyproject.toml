@@ -17,6 +17,7 @@ dynamic = ["version"]
 # ---- Main dependencies ----
 
 dependencies = [
+    "aiohttp>=3.11.18",
     "click>=8.1.8",
     "dagster>=1.10.11",
     "dbt-core>=1.9.4",
@@ -25,6 +26,7 @@ dependencies = [
     "httpx>=0.28.1",
     "loguru>=0.7.3",
     "minio>=7.2.15",
+    "pandas>=2.2.3",
     "psutil>=5.9.5",
     "psycopg[binary]>=3.2.6",
     "pydantic>=2.11.3",

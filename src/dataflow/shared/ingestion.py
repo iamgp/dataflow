@@ -8,11 +8,20 @@ import asyncio
 import csv
 import json
 import os
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, BinaryIO, Generic, Protocol, TextIO, TypeVar, cast
+from typing import (
+    Any,
+    BinaryIO,
+    Generic,
+    Protocol,
+    TextIO,
+    TypeVar,
+    cast,
+)
 
 import aiohttp
 import pandas as pd
@@ -24,10 +33,11 @@ from dataflow.shared.minio import get_minio_client, upload_file_with_client
 
 log = get_logger("dataflow.shared.ingestion")
 
-# Type variable for generic ingestion data types
-T = TypeVar("T")
-SourceType = TypeVar("SourceType")
-ResultType = TypeVar("ResultType")
+# Type variables for generic protocols
+SourceType = TypeVar("SourceType", contravariant=True)
+ProcessorOutputType = TypeVar("ProcessorOutputType", covariant=True)
+SinkInputType = TypeVar("SinkInputType", contravariant=True)
+ResultType = TypeVar("ResultType")  # Invariant: used as both input and output in BaseDataIngestion
 
 
 class DataIngestionError(Exception):
@@ -68,18 +78,18 @@ class IngestionSource(Protocol):
         ...
 
 
-class DataProcessor(Protocol, Generic[SourceType, ResultType]):
+class DataProcessor(Protocol, Generic[SourceType, ProcessorOutputType]):
     """Protocol defining the interface for data processors."""
 
-    def process(self, data: SourceType) -> ResultType:
+    def process(self, data: SourceType) -> ProcessorOutputType:
         """Process the input data and return the result."""
         ...
 
 
-class DataSink(Protocol, Generic[T]):
+class DataSink(Protocol, Generic[SinkInputType]):
     """Protocol defining the interface for data sinks."""
 
-    def store(self, data: T) -> None:
+    def store(self, data: SinkInputType) -> None:
         """Store the data in the sink."""
         ...
 
@@ -281,7 +291,7 @@ class BaseAPIClient:
                         retry=retries,
                         delay=delay,
                     )
-                    asyncio.sleep(delay)
+                    time.sleep(delay)
                     delay *= self.retry_config.backoff_factor
                     continue
 
@@ -466,7 +476,7 @@ def save_to_minio(
     try:
         client = get_minio_client()
 
-        if isinstance(data, (str, bytes)):
+        if isinstance(data, str | bytes):
             # For string or bytes data, create a file-like object
             if isinstance(data, str):
                 data = data.encode("utf-8")
@@ -525,7 +535,7 @@ def save_to_local_file(
 
         is_binary = "b" in mode
 
-        if isinstance(data, (dict, list)):
+        if isinstance(data, dict | list):
             # JSON serializable data
             with open(
                 file_path, mode if is_binary else "w", encoding=None if is_binary else encoding
@@ -541,3 +551,15 @@ def save_to_local_file(
     except Exception as e:
         log.error("Failed to save data to file", file_path=str(file_path), error=str(e))
         raise DataIngestionError(f"Failed to save data to file {file_path}: {e}") from e
+
+
+async def aput_object(
+    self, bucket: str, object_name: str, data: Any, content_type: str | None = None
+) -> None:
+    """
+    Asynchronously put an object into Minio.
+    """
+    # Make sure the bucket exists
+    await self.amake_bucket_if_not_exists(bucket)
+
+    # Continue with the rest of the method...

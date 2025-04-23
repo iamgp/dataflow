@@ -1,3 +1,5 @@
+import inspect
+import os
 from collections.abc import Callable
 from threading import Lock
 from typing import Any
@@ -14,6 +16,9 @@ WorkflowRegistryEntry = dict[str, Any]  # name, function, metadata
 # Use a dictionary to prevent duplicates and allow lookup by name
 _WORKFLOW_REGISTRY: dict[str, WorkflowRegistryEntry] = {}
 _registry_lock = Lock()  # For thread safety
+
+# Expose the registry for CLI use (read-only)
+workflow_registry = _WORKFLOW_REGISTRY
 
 
 def register_workflow(name: str, metadata: dict | None = None) -> Callable:
@@ -67,3 +72,46 @@ def get_workflow_metadata(name: str) -> dict | None:
         if name in _WORKFLOW_REGISTRY:
             return _WORKFLOW_REGISTRY[name]["metadata"]
     return None
+
+
+def get_workflow_path(name: str) -> str | None:
+    """Get the file system path to a workflow's directory.
+
+    Args:
+        name: The name of the workflow.
+
+    Returns:
+        The path to the workflow directory, or None if not found.
+    """
+    with _registry_lock:
+        if name not in _WORKFLOW_REGISTRY:
+            return None
+
+        func = _WORKFLOW_REGISTRY[name]["function"]
+        # Get the module file path
+        try:
+            module = inspect.getmodule(func)
+            if not module:
+                return None
+
+            module_file = inspect.getfile(module)
+            # Get the directory containing the module
+            module_dir = os.path.dirname(os.path.abspath(module_file))
+
+            # For workflow modules, this should be the workflow directory
+            # If the directory name doesn't match the workflow name, search for it
+            dir_name = os.path.basename(module_dir)
+            if dir_name == name:
+                return module_dir
+
+            # If not, try to find a workflow directory with the matching name
+            workflows_dir = os.path.dirname(module_dir)
+            potential_path = os.path.join(workflows_dir, name)
+            if os.path.exists(potential_path) and os.path.isdir(potential_path):
+                return potential_path
+
+            # Still not found, default to the module directory
+            return module_dir
+        except (TypeError, ValueError, AttributeError):
+            log.error(f"Could not determine path for workflow '{name}'")
+            return None

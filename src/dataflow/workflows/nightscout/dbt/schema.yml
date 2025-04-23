@@ -1,0 +1,69 @@
+version: 2
+
+sources:
+  - name: raw_data
+    description: "Raw Nightscout data from the ingestion process"
+    tables:
+      - name: nightscout_entries
+        description: "Raw glucose readings from Nightscout API"
+      - name: nightscout_treatments
+        description: "Raw treatment events from Nightscout API"
+      - name: nightscout_profiles
+        description: "Raw profile data from Nightscout API"
+
+models:
+  - name: readings
+    description: "Processed Nightscout glucose readings"
+    columns:
+      - name: reading_time
+        description: "Timestamp of the glucose reading"
+      - name: glucose_value
+        description: "Glucose value in mg/dL"
+      - name: device
+        description: "Device that recorded the reading"
+      - name: trend
+        description: "Direction of glucose trend"
+      - name: range_category
+        description: "Classification of reading as Low, In Range, or High"
+      - name: reading_date
+        description: "Date of the reading (truncated to day)"
+      - name: reading_hour
+        description: "Hour of the reading (truncated to hour)"
+
+  - name: treatments
+    description: "Processed Nightscout treatment events"
+    columns:
+      - name: event_type
+        description: "Type of treatment event"
+      - name: event_time
+        description: "Timestamp when the treatment occurred"
+      - name: insulin_amount
+        description: "Amount of insulin delivered (if applicable)"
+      - name: carb_amount
+        description: "Amount of carbs consumed (if applicable)"
+      - name: event_category
+        description: "Simplified category of the event"
+      - name: event_date
+        description: "Date of the event (truncated to day)"
+
+  - name: daily_summary
+    description: "Daily summary of glucose readings and treatments"
+    columns:
+      - name: date
+        description: "Date of the summary"
+      - name: reading_count
+        description: "Number of glucose readings"
+      - name: avg_glucose
+        description: "Average glucose level for the day"
+      - name: min_glucose
+        description: "Minimum glucose level for the day"
+      - name: max_glucose
+        description: "Maximum glucose level for the day"
+      - name: time_in_range_pct
+        description: "Percentage of readings in target range"
+      - name: total_insulin
+        description: "Total insulin delivered for the day"
+      - name: total_carbs
+        description: "Total carbs recorded for the day"
+      - name: carb_insulin_ratio
+        description: "Ratio of carbs to insulin for the day"
