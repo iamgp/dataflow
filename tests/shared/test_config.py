@@ -18,7 +18,7 @@ from dataflow.shared.config import (
 from ..utils import unit_test
 
 
-class TestConfig(BaseModel):
+class TestConfigModel(BaseModel):
     """Test configuration model."""
 
     name: str
@@ -86,7 +86,7 @@ def test_validate_workflow_config_valid():
         "nested": {"key": "value"},
     }
 
-    validated = validate_workflow_config(config, TestConfig)
+    validated = validate_workflow_config(config, TestConfigModel)
 
     assert validated is not None
     assert validated["name"] == "test"
@@ -104,7 +104,7 @@ def test_validate_workflow_config_invalid():
     }
 
     with pytest.raises(WorkflowConfigError) as exc:
-        validate_workflow_config(config, TestConfig)
+        validate_workflow_config(config, TestConfigModel)
 
     assert "Invalid workflow configuration" in str(exc.value)
 
@@ -170,7 +170,7 @@ def test_config_manager():
         with patch("dataflow.shared.config.validate_workflow_config") as mock_validate:
             mock_validate.return_value = {"name": "test", "value": 42, "validated": True}
 
-            validated = config_manager.validate_config("test_workflow", TestConfig)
+            validated = config_manager.validate_config("test_workflow", TestConfigModel)
             assert validated is not None
             assert validated["validated"] is True
 

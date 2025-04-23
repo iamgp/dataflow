@@ -12,10 +12,11 @@ from dagster import (
     AssetIn,
     AssetKey,
     AssetOut,
+    Config,
     asset,
     multi_asset,
 )
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from dataflow.shared.logging import get_logger
 from dataflow.shared.minio import get_minio_client, upload_dataframe
@@ -23,7 +24,7 @@ from dataflow.shared.minio import get_minio_client, upload_dataframe
 log = get_logger("dataflow.workflows.nightscout.assets")
 
 
-class NightscoutAssetsConfig(BaseModel):
+class NightscoutAssetsConfig(Config):
     """Configuration for Nightscout assets."""
 
     raw_bucket: str = Field("nightscout-raw", description="MinIO bucket for raw Nightscout data")
@@ -144,17 +145,22 @@ def nightscout_transformed_data(
     name="nightscout_statistics",
     description="Statistical analyses of Nightscout glucose data",
     outs={
-        "daily_stats": AssetOut(key=AssetKey("nightscout_daily_statistics")),
-        "weekly_stats": AssetOut(key=AssetKey("nightscout_weekly_statistics")),
-        "monthly_stats": AssetOut(key=AssetKey("nightscout_monthly_statistics")),
+        "daily_stats": AssetOut(
+            key=AssetKey("nightscout_daily_statistics"), io_manager_key="minio_io_manager"
+        ),
+        "weekly_stats": AssetOut(
+            key=AssetKey("nightscout_weekly_statistics"), io_manager_key="minio_io_manager"
+        ),
+        "monthly_stats": AssetOut(
+            key=AssetKey("nightscout_monthly_statistics"), io_manager_key="minio_io_manager"
+        ),
     },
     ins={"transformed_data": AssetIn("nightscout_transformed_data")},
-    io_manager_key="minio_io_manager",
     group_name="nightscout",
 )
 def nightscout_statistics(
     context: AssetExecutionContext, transformed_data: dict[str, Any], config: NightscoutAssetsConfig
-) -> dict[str, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Generate statistical analyses from transformed Nightscout data.
 
     Args:
@@ -163,7 +169,7 @@ def nightscout_statistics(
         config: Configuration for Nightscout assets
 
     Returns:
-        Dictionary of DataFrames with statistics for different time ranges
+        Tuple of DataFrames with daily, weekly, and monthly statistics
     """
     context.log.info("Calculating Nightscout glucose statistics")
 
@@ -206,8 +212,8 @@ def nightscout_statistics(
 
         context.log.info(f"Generated and saved {time_range} statistics")
 
-    return {
-        "daily_stats": stats["daily_stats"],
-        "weekly_stats": stats["weekly_stats"],
-        "monthly_stats": stats["monthly_stats"],
-    }
+    return (
+        stats["daily_stats"],
+        stats["weekly_stats"],
+        stats["monthly_stats"],
+    )

@@ -67,10 +67,10 @@ class NightscoutEntriesToDataFrame(DataFrameTransformer):
         """
         # Convert dateString to timestamp
         if "dateString" in df.columns:
-            df["timestamp"] = pd.to_datetime(df["dateString"])
+            df["timestamp"] = pd.to_datetime(df["dateString"]).dt.tz_localize("UTC")
         elif "date" in df.columns:
             # Convert milliseconds to seconds for datetime conversion
-            df["timestamp"] = pd.to_datetime(df["date"], unit="ms")
+            df["timestamp"] = pd.to_datetime(df["date"], unit="ms").dt.tz_localize("UTC")
         else:
             raise TransformationError("No date column found in entries data")
 
